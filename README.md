@@ -4,15 +4,9 @@ https://github.com/pauldevelopai/node-capitalfm-verifier/
 
 This is your newsroom's misinformation-defence app. You paste a suspect claim into it — a Facebook post, a WhatsApp screenshot, something that's circulating before the August 2026 election — and it returns a structured verification report: confidence tier, which past examples it looks like, what you should check next, and a draft response you can adapt.
 
-It runs on one laptop in your newsroom for now. You'll use it, the team will use it, you'll feed in real cases as you encounter them. As you find what works and what doesn't, the app gets adjusted — that's the whole point of running it locally first. When it's solid, we deploy it live on the web so everyone in the newsroom can hit it from any browser. The plan is roughly:
+It runs on one laptop in your newsroom for now. You'll use it, the team will use it, you'll feed in real cases as you encounter them. As you find what works and what doesn't, the app gets adjusted — that's the whole point of running it locally first. When it's solid, we deploy it live on the web so everyone in the newsroom can hit it from any browser. 
 
-May–July 2026 — one laptop, you and one or two colleagues using it, building up the corpus of past examples, telling Paul at Develop AI what's working and what isn't.
-
-August 2026 — election window. Daily use. You're now the experts on what the AI gets right and where it stumbles.
-
-After August — the app generalises beyond the election, and we move it from your laptop to the web.
-
-This guide gets it running on the first laptop. No prior coding experience is needed.
+This guide gets it running. No prior coding experience is needed. 
 
 If you get stuck on any step, that's normal. Email Paul at Develop AI and tell him exactly which step you're on and what your screen looks like — he'll get you unstuck. He's already done this with one other newsroom.
 
