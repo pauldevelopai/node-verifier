@@ -1,0 +1,23 @@
+[PLACEHOLDER — replace with a real Capital FM case]
+
+Title of the case (one line)
+
+Claim: One or two sentences stating exactly what the false claim said.
+
+Where it appeared: Which platform, when, who shared it (broadly — "a Facebook account with 12k followers", not the journalist's source notes).
+
+Why it was suspect: Bullet list of the signals that made the newsroom doubt it. Be concrete.
+  - Specific signal one
+  - Specific signal two
+  - Specific signal three
+
+How it was debunked: Who was called, what was checked, what the outcome was. Two or three sentences.
+
+Recurring patterns to watch for: What does this case teach the AI about the next case? Phrasing, imagery, channels, timing.
+  - Pattern one
+  - Pattern two
+
+──────────────────────────────────────────────────────────────────────
+This file is a template, not a real case. Delete it once you have
+two or three real examples loaded. The AI ignores entries marked
+[PLACEHOLDER] when reasoning about new claims.

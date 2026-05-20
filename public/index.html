@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Capital FM Claim Check</title>
+  <style>
+    :root {
+      --bg: #faf9f6;
+      --fg: #1c1c1a;
+      --muted: #6b6b66;
+      --line: #e5e3da;
+      --card: #ffffff;
+      --accent: #1d4e8a;
+      --tier-verified: #2c6b35;
+      --tier-contested: #8a6d1d;
+      --tier-false: #8a2c2c;
+      --tier-insufficient: #5a5a55;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 15px; line-height: 1.55; }
+    header { padding: 1.5rem 2rem 0.5rem; display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; border-bottom: 1px solid var(--line); }
+    header h1 { margin: 0; font-size: 1.4rem; font-weight: 600; }
+    header .subtitle { color: var(--muted); font-size: 0.9rem; }
+    header .change-key { font-size: 0.85rem; color: var(--accent); text-decoration: none; }
+    nav { padding: 0 2rem; display: flex; gap: 1.5rem; border-bottom: 1px solid var(--line); background: var(--bg); }
+    nav button { background: none; border: none; padding: 0.75rem 0; font-size: 0.95rem; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; font-family: inherit; }
+    nav button.active { color: var(--fg); border-bottom-color: var(--accent); font-weight: 500; }
+    main { padding: 1.5rem 2rem 3rem; max-width: 920px; margin: 0 auto; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1rem; }
+    .card h2 { margin: 0 0 0.5rem; font-size: 1.05rem; font-weight: 600; }
+    .card p.help { margin: 0.25rem 0 1rem; color: var(--muted); font-size: 0.9rem; }
+    label { display: block; margin: 0.75rem 0 0.35rem; font-weight: 500; font-size: 0.9rem; }
+    textarea, input[type=text], input[type=url] { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid var(--line); border-radius: 6px; font-family: inherit; font-size: 0.95rem; background: var(--card); color: var(--fg); }
+    textarea { min-height: 90px; resize: vertical; }
+    input[type=file] { font-family: inherit; font-size: 0.9rem; }
+    button.primary { background: var(--accent); color: white; border: none; padding: 0.6rem 1.1rem; border-radius: 6px; font-family: inherit; font-size: 0.95rem; cursor: pointer; font-weight: 500; }
+    button.primary:disabled { background: var(--muted); cursor: not-allowed; }
+    button.secondary { background: none; border: 1px solid var(--line); color: var(--fg); padding: 0.45rem 0.85rem; border-radius: 6px; font-size: 0.9rem; cursor: pointer; font-family: inherit; }
+    .tier-badge { display: inline-block; padding: 0.2rem 0.65rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+    .tier-VERIFIED { background: #e3f0e5; color: var(--tier-verified); }
+    .tier-CONTESTED { background: #f5ecd0; color: var(--tier-contested); }
+    .tier-LIKELY.FALSE { background: #f0d8d8; color: var(--tier-false); }
+    .tier-INSUFFICIENT.EVIDENCE { background: #e8e7e2; color: var(--tier-insufficient); }
+    .report { margin-top: 1rem; }
+    .report .section { margin: 0.85rem 0; }
+    .report .section h3 { margin: 0 0 0.3rem; font-size: 0.85rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .report ul, .report ol { margin: 0.25rem 0 0; padding-left: 1.25rem; }
+    .report .draft { background: #f4f1ea; padding: 0.75rem 1rem; border-radius: 6px; font-style: italic; }
+    .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; }
+    .metric { background: #f4f1ea; padding: 0.85rem 1rem; border-radius: 6px; }
+    .metric .label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .metric .value { font-size: 1.4rem; font-weight: 600; margin-top: 0.15rem; }
+    .recent-claim { padding: 0.75rem 0; border-bottom: 1px solid var(--line); }
+    .recent-claim:last-child { border-bottom: none; }
+    .recent-claim .when { font-size: 0.75rem; color: var(--muted); }
+    .recent-claim .claim { margin: 0.2rem 0; }
+    .corpus-list li { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.85rem; padding: 0.15rem 0; }
+    .empty { color: var(--muted); font-style: italic; padding: 0.5rem 0; }
+    /* welcome screen */
+    .welcome { max-width: 480px; margin: 4rem auto; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 2rem; }
+    .welcome h2 { margin-top: 0; }
+    .provider-row { display: flex; gap: 0.5rem; margin: 0.75rem 0 1rem; }
+    .provider-row button { flex: 1; padding: 0.65rem; border: 1px solid var(--line); background: var(--card); border-radius: 6px; cursor: pointer; font-family: inherit; }
+    .provider-row button.selected { border-color: var(--accent); background: #eef3f8; }
+    .activity-row { padding: 0.4rem 0; border-bottom: 1px solid var(--line); font-size: 0.85rem; }
+    .activity-row:last-child { border-bottom: none; }
+    .activity-row .when { color: var(--muted); }
+    .status-line { padding: 0.5rem 0; color: var(--muted); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+<div id="welcome-screen" class="welcome" style="display:none">
+  <h2>Welcome to Capital FM Claim Check</h2>
+  <p>Before you start, choose your AI provider and paste your API key. The key stays on this computer — it never gets uploaded.</p>
+  <div class="provider-row">
+    <button id="pick-anthropic" data-provider="anthropic">Anthropic (Claude)</button>
+    <button id="pick-openai" data-provider="openai">OpenAI (GPT)</button>
+  </div>
+  <label>Your API key</label>
+  <input type="text" id="welcome-key" placeholder="sk-ant-... or sk-..." autocomplete="off" />
+  <p class="help" style="font-size:0.8rem;color:var(--muted);margin:0.5rem 0 1rem">Don't have a key? See Part 3 of the README in your project folder.</p>
+  <button class="primary" id="welcome-save">Save and continue</button>
+  <p id="welcome-error" style="color:var(--tier-false);margin-top:0.75rem;display:none"></p>
+</div>
+
+<div id="app" style="display:none">
+  <header>
+    <div>
+      <h1>Capital FM Claim Check</h1>
+      <div class="subtitle">AI-assisted verification · Zambian electoral context</div>
+    </div>
+    <a href="#" class="change-key" id="change-key-link">change api key</a>
+  </header>
+
+  <nav>
+    <button class="tab active" data-panel="verify">Check a claim</button>
+    <button class="tab" data-panel="corpus">Past examples</button>
+    <button class="tab" data-panel="history">History</button>
+    <button class="tab" data-panel="activity">Activity</button>
+  </nav>
+
+  <main>
+
+    <section id="panel-verify" class="panel active">
+      <div class="card">
+        <h2>Check a suspect claim</h2>
+        <p class="help">Paste the claim text below, attach a screenshot if you have one, and optionally include the source URL. The AI will return a structured verification report comparing the claim against your past examples.</p>
+
+        <label for="claim-text">Claim text</label>
+        <textarea id="claim-text" placeholder="Paste the suspect claim here. If you only have a screenshot, leave this blank and upload below."></textarea>
+
+        <label for="claim-image">Screenshot (optional)</label>
+        <input type="file" id="claim-image" accept="image/*" />
+
+        <label for="claim-url">Source URL (optional)</label>
+        <input type="url" id="claim-url" placeholder="https://..." />
+
+        <div style="margin-top:1rem">
+          <button class="primary" id="verify-btn">Check this claim</button>
+          <span id="verify-status" class="status-line" style="margin-left:0.75rem"></span>
+        </div>
+
+        <div id="report-area" class="report" style="display:none"></div>
+      </div>
+    </section>
+
+    <section id="panel-corpus" class="panel">
+      <div class="card">
+        <h2>Past examples corpus</h2>
+        <p class="help">These are the past misinformation cases the AI uses as context. Add a new file every time the newsroom flags a case. Plain text only.</p>
+        <div id="corpus-status" class="status-line">Loading…</div>
+        <ul class="corpus-list" id="corpus-list"></ul>
+
+        <h2 style="margin-top:1.5rem">Add a new example</h2>
+        <label for="example-filename">Filename</label>
+        <input type="text" id="example-filename" placeholder="2026-05-20-claim-slug.txt" />
+        <label for="example-content">Example content</label>
+        <textarea id="example-content" placeholder="Title, description, where it appeared, how it was debunked, recurring patterns."></textarea>
+        <div style="margin-top:0.75rem">
+          <button class="primary" id="add-example-btn">Add to corpus</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-history" class="panel">
+      <div class="card">
+        <h2>Verification history</h2>
+        <div id="history-status" class="status-line">Loading…</div>
+        <div class="metric-grid" id="history-metrics"></div>
+        <div id="history-list" style="margin-top:1rem"></div>
+      </div>
+    </section>
+
+    <section id="panel-activity" class="panel">
+      <div class="card">
+        <h2>Activity log</h2>
+        <p class="help">Every action this Node has taken, with timestamps and AI prompt/response summaries. This log is committed to your fork so Develop AI can help you improve the Node based on real usage.</p>
+        <div id="activity-list"><span class="status-line">Loading…</span></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

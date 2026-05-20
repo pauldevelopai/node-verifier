@@ -1,0 +1,16 @@
+{
+  "name": "node-capitalfm-verifier",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Capital FM Claim Check — AI-assisted misinformation defence and verification, tuned for Zambian electoral context.",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "update": "node update.mjs"
+  },
+  "dependencies": {
+    "@developai/grounded-node-runtime": "github:pauldevelopai/grounded-node-runtime#main"
+  },
+  "license": "Apache-2.0"
+}
