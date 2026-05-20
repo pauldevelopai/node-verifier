@@ -18,8 +18,62 @@
 
   // ─── Boot ─────────────────────────────────────────────────────────
 
-  function boot() {
-    wireApp();
+  async function boot() {
+    let status = { configured: false };
+    try {
+      status = await fetchJson('/api/setup');
+    } catch {
+      // If setup endpoint isn't reachable, fall through to welcome.
+    }
+    if (!status.configured) {
+      document.getElementById('welcome-screen').style.display = 'block';
+      wireWelcome();
+    } else {
+      document.getElementById('app').style.display = 'block';
+      wireApp();
+    }
+  }
+
+  // ─── Welcome screen ───────────────────────────────────────────────
+
+  function wireWelcome() {
+    $$('.provider-row button').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        pickedProvider = btn.dataset.provider;
+        $$('.provider-row button').forEach((b) =>
+          b.classList.toggle('selected', b === btn)
+        );
+      });
+    });
+
+    $('#welcome-save').addEventListener('click', async () => {
+      const key = $('#welcome-key').value.trim();
+      const err = $('#welcome-error');
+      err.style.display = 'none';
+
+      if (!pickedProvider) { err.textContent = 'Pick a provider first.'; err.style.display = 'block'; return; }
+      if (!key) { err.textContent = 'Paste your API key.'; err.style.display = 'block'; return; }
+
+      const btn = $('#welcome-save');
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+      try {
+        const result = await postJson('/api/setup', { provider: pickedProvider, apiKey: key });
+        if (!result.ok) {
+          err.textContent = result.message || 'Could not save key.';
+          err.style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = 'Save and continue';
+          return;
+        }
+        location.reload();
+      } catch (e) {
+        err.textContent = 'Network error. Is the server still running?';
+        err.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Save and continue';
+      }
+    });
   }
 
   // ─── Mode switching ───────────────────────────────────────────────
@@ -53,6 +107,15 @@
     // Tabs
     $$('nav button.tab').forEach((btn) => {
       btn.addEventListener('click', () => activateTab(btn));
+    });
+
+    // Change-key link
+    $('#change-key-link')?.addEventListener('click', async (e) => {
+      e.preventDefault();
+      if (confirm('Re-enter your API key? Your existing data and history are kept.')) {
+        await postJson('/api/setup', { provider: null, apiKey: null });
+        location.reload();
+      }
     });
 
     // Verify mode actions

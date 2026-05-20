@@ -106,7 +106,21 @@
 </head>
 <body>
 
-<div id="app">
+<div id="welcome-screen" class="welcome" style="display:none">
+  <h2>Welcome to Capital FM Election Watch</h2>
+  <p>Before you start, choose your AI provider and paste your API key. The key stays on this computer — it never gets uploaded.</p>
+  <div class="provider-row">
+    <button id="pick-anthropic" data-provider="anthropic">Anthropic (Claude)</button>
+    <button id="pick-openai" data-provider="openai">OpenAI (GPT)</button>
+  </div>
+  <label>Your API key</label>
+  <input type="text" id="welcome-key" placeholder="sk-ant-... or sk-..." autocomplete="off" />
+  <p class="help" style="font-size:0.8rem;color:var(--muted);margin:0.5rem 0 1rem">Don't have a key? Anthropic: <a href="https://console.anthropic.com/" target="_blank" rel="noopener">console.anthropic.com</a> · OpenAI: <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com</a></p>
+  <button class="primary" id="welcome-save">Save and continue</button>
+  <p id="welcome-error" style="color:var(--tier-false);margin-top:0.75rem;display:none"></p>
+</div>
+
+<div id="app" style="display:none">
   <header>
     <div>
       <h1>Capital FM Election Watch</h1>
@@ -116,6 +130,7 @@
         <button id="mode-listen" data-mode="listen">Listen mode</button>
       </div>
     </div>
+    <a href="#" class="change-key" id="change-key-link" style="font-size:0.78rem;color:var(--muted);text-decoration:none">change API key</a>
   </header>
 
   <nav>
