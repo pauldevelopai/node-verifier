@@ -1,41 +1,51 @@
-// Capital FM Claim Check — boot
+// Capital FM Election Watch — entry point.
 //
-// Identical infrastructure pattern to node-makanday-analytics:
-//   1. Build the host facade via createLiteHost from the shared runtime
-//   2. Hand handlers.js to createServer; it auto-mounts the standard routes
-//   3. Listen on PORT (default 3000)
+// Two workflows under one app:
+//   1. Verify mode  — claim verification against a corpus of past examples
+//      (handlers in lib/handlers.js, auto-mounted by the runtime)
+//   2. Listen mode  — origin analysis of suspicious Facebook content
+//      (routes in lib/listener-routes.js, mounted after createServer)
 //
-// Application logic lives in lib/. Don't put logic in this file.
+// The runtime auto-mounts the standard /api/* surface from handlers.js.
+// Listener routes live under /api/listener/* and are attached directly
+// to the express app the runtime returns.
 
+import 'dotenv/config';
 import { createLiteHost, createServer } from '@developai/grounded-node-runtime';
 import * as handlers from './lib/handlers.js';
 import { ensureCorpusReady } from './lib/corpus.js';
+import { mountListenerRoutes } from './lib/listener-routes.js';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(readFileSync(join(__dirname, 'package.json'), 'utf8'));
 
 const SLUG = 'capitalfm-verifier';
-const DISPLAY_NAME = 'Capital FM Claim Check';
-const PORT = Number(process.env.PORT) || 3000;
+const DISPLAY_NAME = 'Capital FM Election Watch';
 
 async function main() {
-  const host = await createLiteHost({
-    slug: SLUG,
-    displayName: DISPLAY_NAME,
-    dataDir: './data',
+  const host = createLiteHost({
+    appSlug: SLUG,
+    nodeVersion: pkg.version,
+    newsroom: process.env.NEWSROOM || 'Capital FM',
   });
 
-  // Seed the training-examples folder with a starter README if empty.
-  // Capital FM populates this as they collect real cases.
+  // Verifier-specific: seed the training-examples folder if empty.
   await ensureCorpusReady(host);
 
-  const server = createServer({ host, handlers });
-
-  server.listen(PORT, () => {
-    console.log('');
-    console.log(`✓ ${DISPLAY_NAME} is running.`);
-    console.log(`✓ Open this in your web browser:  http://localhost:${PORT}`);
-    console.log('');
-    console.log('  Press Ctrl+C in this window to stop it.');
-    console.log('');
+  const app = createServer({
+    slug: SLUG,
+    host,
+    handlers,
+    displayName: DISPLAY_NAME,
+    nodeVersion: pkg.version,
   });
+
+  // Listener-specific routes — mounted on the returned express app so
+  // they sit alongside the runtime's standard routes without colliding.
+  mountListenerRoutes(app, host);
 }
 
 main().catch((err) => {

@@ -1,6 +1,21 @@
-**Capital FM Claim Check**
+**Capital FM Election Watch** *(was: Capital FM Claim Check)*
 
 https://github.com/pauldevelopai/node-capitalfm-verifier/
+
+---
+
+**⚠ v0.2.0 — what changed (May 2026)**
+
+The app now does two things instead of one:
+
+- **Verify mode** — the original claim-verification workflow (corpus + history). Unchanged from v0.1.
+- **Listen mode** — new. Senior-staff-controlled origin tracking for suspect Facebook content. Watchlist + paste-driven origin analysis + coordination comparison + weekly editorial brief. Built specifically for the August 2026 Zambian election cycle.
+
+Switch between modes with the pills at the top of the screen.
+
+**API key setup has also changed.** The old welcome screen for pasting in your API key has been removed — keys now live in a `.env` file in the project folder. Copy `.env.example` to `.env` and paste your `ANTHROPIC_API_KEY` value into it. (The handover guide below still references the old welcome-screen flow — it will be rewritten. For now, follow steps 1–3 as written, then in step 4 create the `.env` file instead of using the welcome screen.)
+
+---
 
 This is your newsroom's misinformation-defence app. You paste a suspect claim into it — a Facebook post, a WhatsApp screenshot, something that's circulating before the August 2026 election — and it returns a structured verification report: confidence tier, which past examples it looks like, what you should check next, and a draft response you can adapt.
 
