@@ -7,10 +7,11 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
+    "start:hosted": "node server-hosted.js",
     "update": "node update.mjs"
   },
   "dependencies": {
-    "@developai/grounded-node-runtime": "github:pauldevelopai/grounded-node-runtime#v0.8.0"
+    "@developai/grounded-node-runtime": "github:pauldevelopai/grounded-node-runtime#v0.9.0"
   },
   "license": "Apache-2.0"
 }

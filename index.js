@@ -43,9 +43,10 @@ async function main() {
     nodeVersion: pkg.version,
   });
 
-  // Listener-specific routes — mounted on the returned express app so
-  // they sit alongside the runtime's standard routes without colliding.
-  mountListenerRoutes(app, host);
+  // Listener-specific routes — mounted on the returned express app so they sit
+  // alongside the runtime's standard routes. getHost is a function so the same
+  // routes work hosted (per-request host); locally it's the one fixed host.
+  mountListenerRoutes(app, () => host);
 }
 
 main().catch((err) => {
