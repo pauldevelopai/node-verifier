@@ -1,6 +1,6 @@
 # Training examples
 
-Drop one .txt file per past example of misinformation Capital FM has
+Drop one .txt file per past example of misinformation the newsroom has
 flagged. Plain text. No special format required — the AI will read
 each file as-is.
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Capital FM Claim Check — Mac update launcher
+# Election Watch — Mac update launcher
 # Double-click to fetch the latest version from GitHub.
 
 cd "$(dirname "$0")"

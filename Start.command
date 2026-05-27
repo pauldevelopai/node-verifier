@@ -1,5 +1,5 @@
 #!/bin/bash
-# Capital FM Claim Check — Mac launcher
+# Election Watch — Mac launcher
 # Double-click this file to start the app.
 
 cd "$(dirname "$0")"
@@ -20,7 +20,7 @@ if [ ! -d node_modules ]; then
 fi
 
 echo ""
-echo "Starting Capital FM Claim Check..."
+echo "Starting Election Watch..."
 echo ""
 
 # Open the browser after a short delay

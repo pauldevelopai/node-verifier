@@ -1,4 +1,4 @@
-# NODE.md — Capital FM Election Watch
+# NODE.md — Election Watch
 
 This card identifies this repo as a Node in the GROUNDED ecosystem.
 The full system architecture lives elsewhere; this file just locates
@@ -9,11 +9,11 @@ this Node within it.
 | | |
 |---|---|
 | **Slug** | `capitalfm-verifier` *(retained from v0.1; scope has since broadened)* |
-| **Display name** | Capital FM Election Watch |
+| **Display name** | Election Watch |
 | **Current version** | 0.2.0 |
 | **Status** | build |
 | **Born** | 2026-05-20 (verifier); 2026-05-20 (listener added) |
-| **Pilot newsroom** | Capital FM (Zambia) |
+| **Pilot newsroom** | A Zambian newsroom |
 | **Repo** | `pauldevelopai/node-capitalfm-verifier` (public) |
 | **Election window** | August 2026 Zambian elections (May–July prototype) |
 
@@ -68,8 +68,8 @@ newsroom in the cohort.
 
 ## Trajectory
 
-- Phase 1 (May–July 2026): Build on one Capital FM laptop. Iterate.
-  Capital FM collects real Zambian electoral misinformation examples
+- Phase 1 (May–July 2026): Build on one newsroom laptop. Iterate.
+  The newsroom collects real Zambian electoral misinformation examples
   into the Verify corpus and adds pages to the Listen watchlist.
 - Phase 2 (August 2026): Live use during the election window. Daily
   verification and origin-analysis runs. Activity log and Library
@@ -109,7 +109,7 @@ GET    /api/listener/briefs     (past briefs)
 
 ## Links
 
-- README for Capital FM: [`README.md`](./README.md)
+- README for the newsroom: [`README.md`](./README.md)
 - System reference (Drive folder 02): "2026-05-20 GROUNDED Nodes —
   System Reference v1.0"
 - System reference (in repo): `NODES.md` in

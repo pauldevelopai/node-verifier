@@ -1,4 +1,4 @@
-**Capital FM Election Watch**
+**Election Watch**
 
 https://github.com/pauldevelopai/node-capitalfm-verifier/
 
@@ -132,7 +132,7 @@ The ZIP file lands in your Downloads folder.
 
 Unzip it (double-click on Mac; right-click → Extract All on Windows). You'll get a folder called something like `node-capitalfm-verifier-main`.
 
-Move that folder somewhere sensible. Drag it into your Documents folder. Rename it if you want — `Capital FM Election Watch` is fine.
+Move that folder somewhere sensible. Drag it into your Documents folder. Rename it if you want — `Election Watch` is fine.
 
 Step 4e — Open the folder in VS Code
 
@@ -156,7 +156,7 @@ In VS Code, in the top menu, click View → Terminal.
 
 A new panel opens at the bottom of VS Code with a prompt. This is the terminal — where we type commands.
 
-You should see something like `your-name@computer Capital FM Election Watch %` or `PS C:\Users\your-name\Documents\Capital FM Election Watch>` at the prompt. The important thing: the prompt should mention your folder name.
+You should see something like `your-name@computer Election Watch %` or `PS C:\Users\your-name\Documents\Election Watch>` at the prompt. The important thing: the prompt should mention your folder name.
 
 Step 5b — Install the app's dependencies
 
@@ -179,7 +179,7 @@ npm start
 After a moment, the terminal says something like:
 
 ```
-✓ Capital FM Election Watch is running.
+✓ Election Watch is running.
 ✓ Open this in your web browser:  http://localhost:3000
 ```
 
@@ -323,9 +323,9 @@ Past briefs are listed below — you can scroll back through them.
 
 You don't have to repeat the setup. From now on:
 
-On a Mac: double-click `Start.command` in your Capital FM Election Watch folder. (The first time, your Mac may say "cannot verify the developer". Right-click the file → Open → click Open in the dialog. After that, double-clicking works normally.)
+On a Mac: double-click `Start.command` in your Election Watch folder. (The first time, your Mac may say "cannot verify the developer". Right-click the file → Open → click Open in the dialog. After that, double-clicking works normally.)
 
-On Windows: double-click `Start.bat` in your Capital FM Election Watch folder.
+On Windows: double-click `Start.bat` in your Election Watch folder.
 
 The terminal window opens, the server starts, and your browser opens automatically to the dashboard. Verify mode is on by default; switch to Listen mode using the pills at the top.
 
@@ -357,13 +357,13 @@ If you ever work on a confidential investigation (unpublished sources, sensitive
 
 What we're doing for the first few weeks: you use it on one laptop. Verify mode gets the most use — every suspect claim that crosses the newsroom's desk runs through it. Listen mode is for the senior person watching for foreign info ops in the run-up to August. When the AI gets something wrong — wrong tier, missed a pattern, suggested the wrong check, mis-read an origin signal — you tell Paul. He adjusts the prompt, the corpus structure, the report shape, whatever's needed. Each adjustment ships as an update you'll pull down with the Update button (see below).
 
-Closer to August, once we trust what it's doing, we'll deploy a live version on the web that any Capital FM journalist can use from any browser without installing anything. The laptop version stays around — it's still useful for confidential cases that shouldn't leave the building — but the day-to-day desk-side use moves to the hosted version.
+Closer to August, once we trust what it's doing, we'll deploy a live version on the web that any journalist in the newsroom can use from any browser without installing anything. The laptop version stays around — it's still useful for confidential cases that shouldn't leave the building — but the day-to-day desk-side use moves to the hosted version.
 
 **Getting updates from Develop AI**
 
 Develop AI will improve the app over time. Getting the latest version is one double-click:
 
-On a Mac: double-click `Update.command` in your Capital FM Election Watch folder.
+On a Mac: double-click `Update.command` in your Election Watch folder.
 
 On Windows: double-click `Update.bat`.
 

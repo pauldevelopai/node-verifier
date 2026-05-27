@@ -1,4 +1,4 @@
-// Cross-platform updater for the Capital FM Claim Check Node.
+// Cross-platform updater for the Election Watch Node.
 //
 // Same pattern as the MakanDay Node:
 //   - Bootstraps a non-git folder into a git repo (handles
@@ -121,7 +121,7 @@ function ensureDeps() {
 
 function main() {
   console.log('');
-  console.log('Capital FM Claim Check — update');
+  console.log('Election Watch — update');
   console.log('');
   ensureGit();
   ensureRepo();

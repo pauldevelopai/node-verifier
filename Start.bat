@@ -1,5 +1,5 @@
 @echo off
-REM Capital FM Claim Check — Windows launcher
+REM Election Watch — Windows launcher
 REM Double-click this file to start the app.
 
 cd /d "%~dp0"
@@ -21,7 +21,7 @@ if not exist node_modules (
 )
 
 echo.
-echo Starting Capital FM Claim Check...
+echo Starting Election Watch...
 echo.
 
 start "" http://localhost:3000

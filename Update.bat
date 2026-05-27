@@ -1,5 +1,5 @@
 @echo off
-REM Capital FM Claim Check — Windows update launcher
+REM Election Watch — Windows update launcher
 
 cd /d "%~dp0"
 
