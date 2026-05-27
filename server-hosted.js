@@ -1,5 +1,5 @@
 /**
- * server-hosted.js — the ONLINE (multi-tenant) entry for Capital FM Election
+ * server-hosted.js — the ONLINE (multi-tenant) entry for the newsroom Election
  * Watch. The runtime's createHostedServer provides auth (tracker cookie), a
  * per-request newsroom-scoped host (host.store backed by Postgres), the standard
  * route map, and the GROUNDED chrome. We add the /api/listener/* routes via the
@@ -26,7 +26,7 @@ const pkg = JSON.parse(readFileSync(join(__dirname, "package.json"), "utf8"));
 
 await createHostedServer({
   slug: "verifier",
-  productName: "Capital FM Election Watch",
+  productName: "Election Watch",
   handlers,
   // Custom Listen-mode routes; hostFor(req) gives a per-request, newsroom-scoped host.
   mountRoutes: (app, { hostFor }) => mountListenerRoutes(app, hostFor),

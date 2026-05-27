@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Capital FM Election Watch</title>
+  <title>Election Watch</title>
   <link rel="stylesheet" href="/grounded-chrome.css" />
   <script src="/grounded-chrome.js" defer></script>
   <style>
@@ -107,7 +107,7 @@
 <body>
 
 <div id="welcome-screen" class="welcome" style="display:none">
-  <h2>Welcome to Capital FM Election Watch</h2>
+  <h2>Welcome to Election Watch</h2>
   <p>Before you start, choose your AI provider and paste your API key. The key stays on this computer — it never gets uploaded.</p>
   <div class="provider-row">
     <button id="pick-anthropic" data-provider="anthropic">Anthropic (Claude)</button>
@@ -123,7 +123,7 @@
 <div id="app" style="display:none">
   <header>
     <div>
-      <h1>Capital FM Election Watch</h1>
+      <h1>Election Watch</h1>
       <div class="subtitle">AI-assisted verification + origin tracking · August 2026 Zambian elections</div>
       <div class="mode-switch" role="tablist">
         <button id="mode-verify" class="active" data-mode="verify">Verify mode</button>
@@ -279,7 +279,7 @@
     <section id="panel-library" class="panel">
       <div class="card">
         <h2>Library — analysed posts</h2>
-        <p class="help">Everything Capital FM has run through origin analysis. The longitudinal record. Use the checkboxes to pick 2+ posts and the Compare tab will run a coordination check across them.</p>
+        <p class="help">Everything you have run through origin analysis. The longitudinal record. Use the checkboxes to pick 2+ posts and the Compare tab will run a coordination check across them.</p>
         <div id="library-status" class="status-line">Loading…</div>
         <div id="library-list" style="margin-top:0.75rem"></div>
         <div style="margin-top:1rem">
@@ -302,7 +302,7 @@
     <section id="panel-brief" class="panel">
       <div class="card">
         <h2>Weekly editorial brief</h2>
-        <p class="help">Generates a short brief from the posts Capital FM analysed this week — patterns, shifts in behaviour, pages of concern, story leads. Internal use only; not for publication as-is.</p>
+        <p class="help">Generates a short brief from the posts you have analysed this week — patterns, shifts in behaviour, pages of concern, story leads. Internal use only; not for publication as-is.</p>
         <label for="brief-days">Period (days back from now)</label>
         <input type="text" id="brief-days" value="7" style="max-width:120px" />
         <div style="margin-top:0.75rem">

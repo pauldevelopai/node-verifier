@@ -1,4 +1,4 @@
-// Capital FM Election Watch — entry point.
+// Election Watch — entry point.
 //
 // Two workflows under one app:
 //   1. Verify mode  — claim verification against a corpus of past examples
@@ -23,13 +23,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync(join(__dirname, 'package.json'), 'utf8'));
 
 const SLUG = 'capitalfm-verifier';
-const DISPLAY_NAME = 'Capital FM Election Watch';
+const DISPLAY_NAME = 'Election Watch';
 
 async function main() {
   const host = createLiteHost({
     appSlug: SLUG,
     nodeVersion: pkg.version,
-    newsroom: process.env.NEWSROOM || 'Capital FM',
+    newsroom: process.env.NEWSROOM,   // unset → falls back to saved meta, then none
   });
 
   // Verifier-specific: seed the training-examples folder if empty.

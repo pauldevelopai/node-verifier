@@ -1,4 +1,4 @@
-# install.ps1 — one-command installer for the Capital FM Election Watch Node (Windows).
+# install.ps1 — one-command installer for the Election Watch Node (Windows).
 #
 # A newsroom runs ONE line in the built-in PowerShell — nothing to install by hand:
 #
@@ -24,7 +24,7 @@ $Ref     = if ($env:GROUNDED_REF)          { $env:GROUNDED_REF }          else {
 $NodeVer = if ($env:GROUNDED_NODE_VERSION) { $env:GROUNDED_NODE_VERSION } else { '20.18.1' }
 $Root    = if ($env:GROUNDED_HOME)         { $env:GROUNDED_HOME }         else { Join-Path $env:USERPROFILE 'GROUNDED' }
 $AppDir  = Join-Path $Root 'node-verifier'
-$Name    = 'Capital FM Election Watch'
+$Name    = 'Election Watch'
 $Port    = if ($env:PORT) { $env:PORT } else { '3000' }
 
 function Say($m) { Write-Host "  $m" }

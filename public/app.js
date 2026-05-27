@@ -1,4 +1,4 @@
-// Capital FM Election Watch — dashboard JS
+// Election Watch — dashboard JS
 //
 // Two modes, one app:
 //   Verify mode  → existing claim-verification flow (corpus + history)

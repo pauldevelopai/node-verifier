@@ -26,7 +26,7 @@ REF="${GROUNDED_REF:-main}"
 NODE_VERSION="${GROUNDED_NODE_VERSION:-20.18.1}"
 GROUNDED_HOME="${GROUNDED_HOME:-$HOME/GROUNDED}"
 APP_DIR="$GROUNDED_HOME/node-verifier"
-DISPLAY_NAME="Capital FM Election Watch"
+DISPLAY_NAME="Election Watch"
 PORT="${PORT:-3000}"
 
 say() { printf "  %s\n" "$*"; }

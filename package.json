@@ -2,7 +2,7 @@
   "name": "node-capitalfm-verifier",
   "version": "0.2.2",
   "private": true,
-  "description": "Capital FM Election Watch — AI-assisted claim verification + origin tracking for foreign-manufactured content, tuned for the August 2026 Zambian elections.",
+  "description": "Election Watch — AI-assisted claim verification + origin tracking for foreign-manufactured content, tuned for the August 2026 Zambian elections.",
   "type": "module",
   "main": "index.js",
   "scripts": {
