@@ -21,7 +21,7 @@
   async function boot() {
     let status = { configured: false };
     try {
-      status = await fetchJson('/api/setup');
+      status = await fetchJson('api/setup');
     } catch {
       // If setup endpoint isn't reachable, fall through to welcome.
     }
@@ -58,7 +58,7 @@
       btn.disabled = true;
       btn.textContent = 'Saving…';
       try {
-        const result = await postJson('/api/setup', { provider: pickedProvider, apiKey: key });
+        const result = await postJson('api/setup', { provider: pickedProvider, apiKey: key });
         if (!result.ok) {
           err.textContent = result.message || 'Could not save key.';
           err.style.display = 'block';
@@ -113,7 +113,7 @@
     $('#change-key-link')?.addEventListener('click', async (e) => {
       e.preventDefault();
       if (confirm('Re-enter your API key? Your existing data and history are kept.')) {
-        await postJson('/api/setup', { provider: null, apiKey: null });
+        await postJson('api/setup', { provider: null, apiKey: null });
         location.reload();
       }
     });
@@ -173,7 +173,7 @@
         imageMimeType = file.type || 'image/jpeg';
       }
 
-      const result = await postJson('/api/brief', {
+      const result = await postJson('api/brief', {
         claimText: claimText || null,
         imageBase64,
         imageMimeType,
@@ -230,7 +230,7 @@
     const list = $('#corpus-list');
     status.textContent = 'Loading…';
     list.innerHTML = '';
-    const result = await fetchJson('/api/sources');
+    const result = await fetchJson('api/sources');
     if (result.corpus_size === 0) {
       status.innerHTML = '<span class="empty">No examples yet. Add the first one below.</span>';
       return;
@@ -248,7 +248,7 @@
     const content = $('#example-content').value.trim();
     if (!filename || !content) { alert('Both filename and content are required.'); return; }
     const finalName = filename.endsWith('.txt') ? filename : filename + '.txt';
-    const result = await postJson('/api/ingest', { filename: finalName, content });
+    const result = await postJson('api/ingest', { filename: finalName, content });
     if (result.ok) {
       $('#example-filename').value = '';
       $('#example-content').value = '';
@@ -266,7 +266,7 @@
     metrics.innerHTML = '';
     list.innerHTML = '';
 
-    const [report, quality] = await Promise.all([fetchJson('/api/report'), fetchJson('/api/quality')]);
+    const [report, quality] = await Promise.all([fetchJson('api/report'), fetchJson('api/quality')]);
 
     metrics.innerHTML = `
       <div class="metric"><div class="label">Total checked</div><div class="value">${quality.total_claims_checked}</div></div>
@@ -301,7 +301,7 @@
     const list = $('#watchlist-list');
     status.textContent = 'Loading…';
     list.innerHTML = '';
-    const result = await fetchJson('/api/listener/pages');
+    const result = await fetchJson('api/listener/pages');
     const pages = result.pages || [];
     if (!pages.length) {
       status.innerHTML = '<span class="empty">Watchlist is empty. Add the first page below.</span>';
@@ -344,7 +344,7 @@
       notes: $('#page-notes').value,
       ad_library_active: $('#page-ad-library').checked,
     };
-    const result = await postJson('/api/listener/pages', body);
+    const result = await postJson('api/listener/pages', body);
     if (!result.ok) {
       alert(result.message || 'Could not add page.');
       return;
@@ -357,7 +357,7 @@
 
   async function removeWatchlistPage(id) {
     if (!confirm('Remove this page from the watchlist?')) return;
-    const r = await fetch('/api/listener/pages/' + encodeURIComponent(id), { method: 'DELETE' });
+    const r = await fetch('api/listener/pages/' + encodeURIComponent(id), { method: 'DELETE' });
     if (r.ok) loadWatchlist();
   }
 
@@ -383,7 +383,7 @@
     area.style.display = 'none';
 
     try {
-      const result = await postJson('/api/listener/analyze', { postText, pageUrl, postUrl, journalistNotes });
+      const result = await postJson('api/listener/analyze', { postText, pageUrl, postUrl, journalistNotes });
       if (!result.ok) {
         status.textContent = result.message || 'Analysis failed.';
         status.style.color = 'var(--tier-false)';
@@ -440,7 +440,7 @@
     const list = $('#library-list');
     status.textContent = 'Loading…';
     list.innerHTML = '';
-    const result = await fetchJson('/api/listener/posts');
+    const result = await fetchJson('api/listener/posts');
     const posts = result.posts || [];
     libraryCache = posts;
     selectedPostIds.clear();
@@ -497,7 +497,7 @@
     status.textContent = `Comparing ${selectedPostIds.size} post(s)… this usually takes 15–30 seconds.`;
     area.style.display = 'none';
 
-    const result = await postJson('/api/listener/compare', { postIds: Array.from(selectedPostIds) });
+    const result = await postJson('api/listener/compare', { postIds: Array.from(selectedPostIds) });
     if (!result.ok) {
       status.textContent = result.message || 'Comparison failed.';
       status.style.color = 'var(--tier-false)';
@@ -550,7 +550,7 @@
     $('#generate-brief-btn').disabled = true;
 
     try {
-      const result = await postJson('/api/listener/brief', { days });
+      const result = await postJson('api/listener/brief', { days });
       if (!result.ok) {
         status.textContent = result.message || 'Brief failed.';
         status.style.color = 'var(--tier-false)';
@@ -601,7 +601,7 @@
   async function loadBriefs() {
     const list = $('#briefs-list');
     list.innerHTML = '<span class="status-line">Loading…</span>';
-    const result = await fetchJson('/api/listener/briefs');
+    const result = await fetchJson('api/listener/briefs');
     const briefs = result.briefs || [];
     if (!briefs.length) {
       list.innerHTML = '<span class="empty">No past briefs yet.</span>';
@@ -624,7 +624,7 @@
   async function loadActivity() {
     const list = $('#activity-list');
     list.innerHTML = '<span class="status-line">Loading…</span>';
-    const entries = await fetchJson('/api/activity');
+    const entries = await fetchJson('api/activity');
     if (!Array.isArray(entries) || entries.length === 0) {
       list.innerHTML = '<span class="empty">No activity recorded yet.</span>';
       return;
