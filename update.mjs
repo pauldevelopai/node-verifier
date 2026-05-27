@@ -13,7 +13,7 @@ import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const UPSTREAM = 'https://github.com/pauldevelopai/node-capitalfm-verifier.git';
+const UPSTREAM = 'https://github.com/pauldevelopai/node-verifier.git';
 const BRANCH = 'main';
 
 function run(cmd, opts = {}) {

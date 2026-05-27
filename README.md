@@ -1,6 +1,6 @@
 **Election Watch**
 
-https://github.com/pauldevelopai/node-capitalfm-verifier/
+https://github.com/pauldevelopai/node-verifier/
 
 This is your newsroom's misinformation-defence app, tuned for the August 2026 Zambian elections. It does two things, under one roof:
 
@@ -94,13 +94,13 @@ Click Sign up and follow the steps. Use your work email.
 
 Step 4b — Fork the app to your own account
 
-Once signed in to GitHub, go to: https://github.com/pauldevelopai/node-capitalfm-verifier
+Once signed in to GitHub, go to: https://github.com/pauldevelopai/node-verifier
 
 In the top-right of that page, click the button labelled Fork.
 
 On the next screen, click the green Create fork button. (You can leave all the settings as they are.)
 
-After a moment, GitHub shows you a copy of the project — but this time under your username. Look at the top-left to confirm: it should say `your-username / node-capitalfm-verifier`.
+After a moment, GitHub shows you a copy of the project — but this time under your username. Look at the top-left to confirm: it should say `your-username / node-verifier`.
 
 You now own a copy. Keep this browser tab open — we'll need it.
 
@@ -108,7 +108,7 @@ Step 4c — Add Paul as a collaborator on your fork
 
 This is important. Develop AI improves the app as you give feedback. To do that, Paul needs permission to push small fixes to your copy. This is one click.
 
-On your fork's page (the one that says `your-username / node-capitalfm-verifier` at the top), click Settings (near the right side of the menu under the repo name).
+On your fork's page (the one that says `your-username / node-verifier` at the top), click Settings (near the right side of the menu under the repo name).
 
 In the left sidebar, click Collaborators.
 
@@ -130,7 +130,7 @@ In the menu that drops down, click Download ZIP.
 
 The ZIP file lands in your Downloads folder.
 
-Unzip it (double-click on Mac; right-click → Extract All on Windows). You'll get a folder called something like `node-capitalfm-verifier-main`.
+Unzip it (double-click on Mac; right-click → Extract All on Windows). You'll get a folder called something like `node-verifier-main`.
 
 Move that folder somewhere sensible. Drag it into your Documents folder. Rename it if you want — `Election Watch` is fine.
 

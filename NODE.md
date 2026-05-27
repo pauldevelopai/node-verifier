@@ -14,7 +14,7 @@ this Node within it.
 | **Status** | build |
 | **Born** | 2026-05-20 (verifier); 2026-05-20 (listener added) |
 | **Pilot newsroom** | A Zambian newsroom |
-| **Repo** | `pauldevelopai/node-capitalfm-verifier` (public) |
+| **Repo** | `pauldevelopai/node-verifier` (public) |
 | **Election window** | August 2026 Zambian elections (May–July prototype) |
 
 ## What this Node does
