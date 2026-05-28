@@ -11,7 +11,7 @@
     "update": "node update.mjs"
   },
   "dependencies": {
-    "@developai/grounded-node-runtime": "github:pauldevelopai/grounded-node-runtime#v0.9.0"
+    "@developai/grounded-node-runtime": "github:pauldevelopai/grounded-node-runtime#v0.10.0"
   },
   "license": "Apache-2.0"
 }
