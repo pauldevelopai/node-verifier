@@ -1,6 +1,6 @@
 {
   "name": "node-capitalfm-verifier",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "private": true,
   "description": "Election Watch — AI-assisted claim verification + origin tracking for foreign-manufactured content, tuned for the August 2026 Zambian elections.",
   "type": "module",
@@ -11,7 +11,7 @@
     "update": "node update.mjs"
   },
   "dependencies": {
-    "@developai/grounded-node-runtime": "github:pauldevelopai/grounded-node-runtime#v0.10.0"
+    "@developai/grounded-node-runtime": "github:pauldevelopai/grounded-node-runtime#v0.11.0"
   },
   "license": "Apache-2.0"
 }

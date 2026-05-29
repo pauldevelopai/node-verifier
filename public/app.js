@@ -190,8 +190,9 @@
         return;
       }
 
-      status.textContent = `Done. Corpus size at time of check: ${result.corpus_size} example(s).`;
-      renderReport(result.report);
+      const fetched = result.source_fetched ? ' · source page fetched' : '';
+      status.textContent = `Done. Checked the live web${fetched}. Corpus: ${result.corpus_size} example(s).`;
+      renderReport(result.report, result.citations);
     } catch (e) {
       status.textContent = 'Network error: ' + e.message;
       status.style.color = 'var(--tier-false)';
@@ -200,13 +201,31 @@
     }
   }
 
-  function renderReport(report) {
+  function renderReport(report, citations) {
     const area = $('#report-area');
     const tierClass = 'tier-' + (report.tier || '').replace(/ /g, '.');
     const matching = (report.matching_examples || [])
       .map((m) => `<li><code>${escapeHtml(m.filename)}</code> — ${escapeHtml(m.why_it_matches)}</li>`).join('');
     const reasoning = (report.reasoning_chain || []).map((s) => `<li>${escapeHtml(s)}</li>`).join('');
     const checks = (report.further_checks || []).map((s) => `<li>${escapeHtml(s)}</li>`).join('');
+
+    // Sources the model relied on: prefer the model's key_sources; supplement
+    // with web-search citations the runtime captured (deduped by URL).
+    const seen = new Set();
+    const sourceItems = [];
+    (report.key_sources || []).forEach((s) => {
+      const url = (s.url || '').trim();
+      if (url) seen.add(url);
+      const link = url ? `<a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">${escapeHtml(s.title || url)}</a>` : escapeHtml(s.title || 'Source');
+      sourceItems.push(`<li>${link}${s.what_it_says ? ' — ' + escapeHtml(s.what_it_says) : ''}</li>`);
+    });
+    (citations || []).forEach((c) => {
+      const url = (c.url || '').trim();
+      if (!url || seen.has(url)) return;
+      seen.add(url);
+      sourceItems.push(`<li><a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">${escapeHtml(c.title || url)}</a></li>`);
+    });
+    const sources = sourceItems.join('');
 
     area.innerHTML = `
       <div class="section">
@@ -217,6 +236,7 @@
         <h3>Claim restated</h3>
         <div>${escapeHtml(report.claim_restated || '')}</div>
       </div>
+      ${sources ? `<div class="section"><h3>Sources checked (live web)</h3><ul>${sources}</ul></div>` : ''}
       ${matching ? `<div class="section"><h3>Matching past examples</h3><ul>${matching}</ul></div>` : ''}
       ${reasoning ? `<div class="section"><h3>Reasoning</h3><ol>${reasoning}</ol></div>` : ''}
       ${checks ? `<div class="section"><h3>Further checks</h3><ul>${checks}</ul></div>` : ''}
@@ -368,11 +388,12 @@
     const pageUrl = $('#post-page-url').value.trim();
     const postUrl = $('#post-url').value.trim();
     const journalistNotes = $('#post-notes').value.trim();
+    const file = $('#post-image') ? $('#post-image').files[0] : null;
     const status = $('#analyze-status');
     const area = $('#profile-area');
 
-    if (!postText) {
-      status.textContent = 'Paste the post text first.';
+    if (!postText && !file) {
+      status.textContent = 'Paste the post text or attach a screenshot.';
       status.style.color = 'var(--tier-false)';
       return;
     }
@@ -383,7 +404,13 @@
     area.style.display = 'none';
 
     try {
-      const result = await postJson('api/listener/analyze', { postText, pageUrl, postUrl, journalistNotes });
+      let imageBase64 = null;
+      let imageMimeType = null;
+      if (file) {
+        imageBase64 = await fileToBase64(file);
+        imageMimeType = file.type || 'image/jpeg';
+      }
+      const result = await postJson('api/listener/analyze', { postText, pageUrl, postUrl, journalistNotes, imageBase64, imageMimeType });
       if (!result.ok) {
         status.textContent = result.message || 'Analysis failed.';
         status.style.color = 'var(--tier-false)';
