@@ -309,9 +309,16 @@
 
   function renderOrigin() {
     const area = $('#origin-area');
-    const { parsed, meta, risk, context, enrichment, ads } = currentOrigin;
+    const { parsed, meta, risk, context, enrichment, ads, resolution } = currentOrigin;
     const a = parsed.account || {};
     const who = a.displayHint || a.handle || (a.numericId ? 'ID ' + a.numericId : 'Unknown account');
+
+    // Did we follow a share/watch/reel link through to the real post?
+    const resolvedBanner = (resolution && resolution.resolved && resolution.url)
+      ? `<div class="origin-note" style="color:var(--tier-verified)">✓ Followed the share link to the real post: <a href="${escapeHtml(resolution.url)}" target="_blank" rel="noreferrer">${escapeHtml(resolution.url)}</a></div>`
+      : (resolution && !resolution.resolved)
+        ? `<div class="origin-note">Tried to follow the share link but Facebook didn’t expose the destination (${escapeHtml(resolution.reason || 'blocked')}). Open it in a browser to see the origin.</div>`
+        : '';
 
     const notes = (parsed.notes || []).map((n) => `<div class="origin-note">• ${escapeHtml(n)}</div>`).join('');
 
@@ -354,6 +361,7 @@
     area.innerHTML = `
       <div class="origin-box">
         <h3>Where this came from</h3>
+        ${resolvedBanner}
         <div class="ident"><span class="who">${escapeHtml(who)}</span> <span class="pill">${escapeHtml(a.type || 'unknown')}</span> <span class="pill">${escapeHtml(parsed.kind)}</span>${context && context.category ? ` <span class="pill">${escapeHtml(context.category)}</span>` : ''}</div>
         ${a.url ? `<div class="url" style="font-size:0.8rem;margin-top:0.2rem"><a href="${escapeHtml(a.url)}" target="_blank" rel="noreferrer">${escapeHtml(a.url)}</a></div>` : ''}
         ${context && context.confirmed_owner ? `<div class="origin-note">Confirmed owner: <strong>${escapeHtml(context.confirmed_owner)}</strong></div>` : ''}
