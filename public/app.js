@@ -362,6 +362,7 @@
         ${enrichLine}
 
         <div class="section" style="margin-top:0.7rem"><h3>Account risk signals</h3>${flags}</div>
+        ${risk.cadence ? `<div class="origin-note">Posting cadence (sample of ${risk.cadence.sampled}): ~${risk.cadence.per_day}/day · mean ${risk.cadence.mean_interval_min} min apart · spans ${risk.cadence.distinct_hours} hrs/day · regularity ${risk.cadence.regularity_cv}.</div>` : ''}
         <div class="origin-note" style="margin-top:0.3rem"><em>${escapeHtml(risk.summary || '')}</em></div>
         ${adsBlock}
         ${cnd}
