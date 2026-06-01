@@ -6,7 +6,7 @@ This is your newsroom's misinformation-defence app, tuned for the August 2026 Za
 
 **Verify mode** — a journalist pastes a suspect claim (a Facebook post, a WhatsApp screenshot, something circulating) and the AI returns a structured verification report: confidence tier, which past examples it looks like, what to check next, a draft response.
 
-**Listen mode** — senior staff only. Track the *origin* of suspect Facebook content — pages with foreign administrators, coordinated talking-point lifts, identity-history anomalies — rather than what posts say. Includes a watchlist, post-by-post origin analysis, a coordination check across multiple posts, and a weekly editorial brief.
+**Listen mode** — Track the *origin* of suspect Facebook content — pages with foreign administrators, coordinated talking-point lifts, identity-history anomalies — rather than what posts say. Includes a watchlist, post-by-post origin analysis, a coordination check across multiple posts, and a weekly editorial brief.
 
 It runs on one laptop in your newsroom for now. You'll use it, the team will use it, you'll feed in real cases as you encounter them. As you find what works and what doesn't, the app gets adjusted — that's the whole point of running it locally first. When it's solid, we deploy it live on the web so everyone in the newsroom can hit it from any browser.
 
@@ -36,9 +36,9 @@ We'll do nine things. Each one is small. After each, the app gets a bit closer t
 
 6) Check your first suspect claim (Verify mode).
 
-7) Add the first pages to the watchlist (Listen mode — senior staff).
+7) Add the first pages to the watchlist (Listen mode).
 
-8) Analyse your first suspect post for origin signals (Listen mode — senior staff).
+8) Analyse your first suspect post for origin signals (Listen mode).
 
 9) Know how to ask for help.
 
@@ -246,9 +246,9 @@ Read it. Decide if you agree. Run the further checks. The tier is the AI's read,
 
 Click "History" to see every claim you've checked.
 
-**Part 9 — Listen mode (senior staff only)**
+**Part 9 — Listen mode**
 
-> This part is for senior staff with editorial oversight. The Listen mode workflow makes assertions about *origin* of content — which page produced it, whether multiple pages look coordinated, whether posts read as foreign-manufactured. These are sensitive editorial calls. Don't open this to general journalists.
+> Listen mode makes assertions about the *origin* of content — which page produced it, whether multiple pages look coordinated, whether posts read as foreign-manufactured. These are sensitive editorial calls, so treat the output as a lead to check, never a verdict to publish.
 
 Listen mode tracks *where Facebook content comes from*, not what it says. The same political claim from a transparent Zambian newsroom and from a page administered in another country with a recent name change are two completely different editorial situations.
 
@@ -288,7 +288,7 @@ After 15–30 seconds, the **Origin Risk Profile** appears:
 - **Confidence label**: LOW CONCERN · WORTH WATCHING · STRONG SIGNALS · HIGHLY COORDINATED
 - **Flags**: categorised observations — transparency mismatch, linguistic tells, talking-point lift, timing pattern, identity history, platform artefact
 - **Why-chain**: numbered reasoning starting from observable evidence, not the conclusion
-- **Further checks**: specific actions for senior staff (check Meta Ad Library, look for the same image on Russian-state-media sites, etc.)
+- **Further checks**: specific actions to take (check Meta Ad Library, look for the same image on Russian-state-media sites, etc.)
 - **What NOT to publish**: things the newsroom must not assert based on this analysis alone
 - **Editorial lead**: if it's worth a story, what's the angle
 
@@ -355,7 +355,7 @@ If you ever work on a confidential investigation (unpublished sources, sensitive
 
 **The plan from here**
 
-What we're doing for the first few weeks: you use it on one laptop. Verify mode gets the most use — every suspect claim that crosses the newsroom's desk runs through it. Listen mode is for the senior person watching for foreign info ops in the run-up to August. When the AI gets something wrong — wrong tier, missed a pattern, suggested the wrong check, mis-read an origin signal — you tell Paul. He adjusts the prompt, the corpus structure, the report shape, whatever's needed. Each adjustment ships as an update you'll pull down with the Update button (see below).
+What we're doing for the first few weeks: you use it on one laptop. Verify mode gets the most use — every suspect claim that crosses the newsroom's desk runs through it. Listen mode is for whoever on the team is watching for foreign info ops in the run-up to August. When the AI gets something wrong — wrong tier, missed a pattern, suggested the wrong check, mis-read an origin signal — you tell Paul. He adjusts the prompt, the corpus structure, the report shape, whatever's needed. Each adjustment ships as an update you'll pull down with the Update button (see below).
 
 Closer to August, once we trust what it's doing, we'll deploy a live version on the web that any journalist in the newsroom can use from any browser without installing anything. The laptop version stays around — it's still useful for confidential cases that shouldn't leave the building — but the day-to-day desk-side use moves to the hosted version.
 

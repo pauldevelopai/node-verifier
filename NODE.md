@@ -37,7 +37,7 @@ Zambian electoral context.
 
 ### Listen mode — origin analysis
 
-Senior staff watch a list of Facebook pages and paste suspect posts
+The newsroom watches a list of Facebook pages and pastes suspect posts
 plus the Facebook Page Transparency data they've manually pulled. The
 AI returns an Origin Risk Profile focused on **where the content came
 from, not what it says** — transparency mismatches, linguistic tells,
@@ -49,7 +49,7 @@ A Compare workflow checks two or more posts for coordination signals
 (content overlap, timing, shared phrasing). A Brief workflow generates
 a weekly editorial summary from the analysed posts.
 
-Listen mode is deliberately senior-staff-controlled and paste-driven.
+Listen mode is paste-driven.
 v1 does not crawl Facebook — CrowdTangle is dead, Meta Content
 Library is gated behind research access, the Graph API needs app
 review. v1 is built to the paste-driven constraint, not apologising
