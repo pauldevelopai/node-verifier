@@ -31,6 +31,15 @@ await createHostedServer({
   handlers,
   // Custom Listen-mode routes; hostFor(req) gives a per-request, newsroom-scoped host.
   mountRoutes: (app, { hostFor }) => {
+    // The runtime serves the chrome-injected index.html with no cache header, so
+    // browsers heuristically cache the app shell and miss UI updates until a hard
+    // refresh. mountRoutes runs BEFORE the static/catch-all handlers, so a no-cache
+    // header set here makes the shell (and assets) always revalidate. /api is
+    // untouched (those routes already matched and responded earlier).
+    app.use((req, res, next) => {
+      if (req.method === 'GET' && !req.path.startsWith('/api/')) res.set('Cache-Control', 'no-cache');
+      next();
+    });
     mountListenerRoutes(app, hostFor);
     mountInspectRoutes(app, hostFor);
   },
