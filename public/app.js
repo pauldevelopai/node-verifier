@@ -357,6 +357,7 @@
         <div class="ident"><span class="who">${escapeHtml(who)}</span> <span class="pill">${escapeHtml(a.type || 'unknown')}</span> <span class="pill">${escapeHtml(parsed.kind)}</span>${context && context.category ? ` <span class="pill">${escapeHtml(context.category)}</span>` : ''}</div>
         ${a.url ? `<div class="url" style="font-size:0.8rem;margin-top:0.2rem"><a href="${escapeHtml(a.url)}" target="_blank" rel="noreferrer">${escapeHtml(a.url)}</a></div>` : ''}
         ${context && context.confirmed_owner ? `<div class="origin-note">Confirmed owner: <strong>${escapeHtml(context.confirmed_owner)}</strong></div>` : ''}
+        ${context && context.post_text ? `<div class="origin-note">Post content (read from the post): “${escapeHtml(truncate(context.post_text, 240))}”</div>` : ''}
         ${notes}
         ${metaLine}
         ${enrichLine}
