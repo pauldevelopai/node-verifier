@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #
-# install.sh — one-command installer for the Audience Signal Node (macOS).
+# install.sh — one-command installer for the Election Watch Node (macOS).
 #
 # A newsroom runs ONE line in the built-in Terminal app — nothing to install by hand:
 #
-#     curl -fsSL https://grounded.developai.co.za/nodes/analytics/mac | bash
+#     curl -fsSL https://grounded.developai.co.za/nodes/verifier/mac | bash
 #
 # What it does — no admin password, no Xcode tools, no Homebrew, no git, no VS Code:
 #   1. Uses the Node already on the Mac if it's new enough; otherwise downloads a

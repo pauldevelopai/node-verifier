@@ -2,7 +2,7 @@
 #
 # A newsroom runs ONE line in the built-in PowerShell — nothing to install by hand:
 #
-#     irm https://grounded.developai.co.za/nodes/analytics/windows | iex
+#     irm https://grounded.developai.co.za/nodes/verifier/windows | iex
 #
 # What it does — no admin rights, no installers to click through, no git, no VS Code:
 #   1. Uses the Node already on the PC if it's new enough; otherwise downloads a
