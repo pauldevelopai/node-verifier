@@ -15,6 +15,7 @@ import { createLiteHost, createServer } from '@developai/grounded-node-runtime';
 import * as handlers from './lib/handlers.js';
 import { ensureCorpusReady } from './lib/corpus.js';
 import { mountListenerRoutes } from './lib/listener-routes.js';
+import { mountInspectRoutes } from './lib/inspect-routes.js';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -47,6 +48,9 @@ async function main() {
   // alongside the runtime's standard routes. getHost is a function so the same
   // routes work hosted (per-request host); locally it's the one fixed host.
   mountListenerRoutes(app, () => host);
+
+  // Verify-mode origin tracking: /api/inspect (Facebook URL → account + risk).
+  mountInspectRoutes(app, () => host);
 }
 
 main().catch((err) => {

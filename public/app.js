@@ -15,6 +15,7 @@
   let currentMode = 'verify';
   let selectedPostIds = new Set();
   let libraryCache = [];
+  let currentOrigin = null;   // { parsed, meta, risk, context } for the pasted source URL
 
   // ─── Boot ─────────────────────────────────────────────────────────
 
@@ -121,6 +122,11 @@
     // Verify mode actions
     $('#verify-btn').addEventListener('click', verifyClaim);
     $('#add-example-btn').addEventListener('click', addExample);
+    $('#inspect-btn').addEventListener('click', () => inspectOrigin());
+    $('#claim-url').addEventListener('blur', () => {
+      const u = $('#claim-url').value.trim();
+      if (u && !currentOrigin) inspectOrigin();   // auto-track once when a link is pasted
+    });
 
     // Listen mode actions
     $('#add-page-btn').addEventListener('click', addWatchlistPage);
@@ -173,11 +179,20 @@
         imageMimeType = file.type || 'image/jpeg';
       }
 
+      // If the journalist tracked the source account, fold the latest context in
+      // and send the whole origin packet so the verifier weighs it and stores it.
+      let accountOrigin = null;
+      if (currentOrigin && currentOrigin.parsed) {
+        currentOrigin.context = gatherOriginContext();
+        accountOrigin = currentOrigin;
+      }
+
       const result = await postJson('api/brief', {
         claimText: claimText || null,
         imageBase64,
         imageMimeType,
         sourceUrl: sourceUrl || null,
+        accountOrigin,
       });
 
       if (!result.ok) {
@@ -243,6 +258,153 @@
       ${report.draft_response ? `<div class="section"><h3>Suggested draft response</h3><div class="draft">${escapeHtml(report.draft_response)}</div></div>` : ''}
     `;
     area.style.display = 'block';
+  }
+
+  // ─── Verify mode: source-account origin tracking (Facebook) ───────
+
+  async function inspectOrigin() {
+    const url = $('#claim-url').value.trim();
+    const area = $('#origin-area');
+    if (!url) { area.style.display = 'none'; currentOrigin = null; return; }
+
+    const btn = $('#inspect-btn');
+    btn.disabled = true;
+    const prevLabel = btn.textContent;
+    btn.textContent = 'Tracking…';
+    area.style.display = 'block';
+    area.innerHTML = '<div class="origin-box"><span class="status-line">Identifying the account behind this link…</span></div>';
+
+    try {
+      // Re-use any context the journalist already typed (so re-runs keep it).
+      const context = currentOrigin ? gatherOriginContext() : {};
+      const data = await postJson('api/inspect', { url, context });
+      if (!data.ok) {
+        area.innerHTML = `<div class="origin-box"><span class="status-line" style="color:var(--tier-false)">${escapeHtml(data.message || 'Could not inspect this URL.')}</span></div>`;
+        currentOrigin = null;
+        return;
+      }
+      if (data.supported === false) {
+        currentOrigin = null;
+        area.innerHTML = `<div class="origin-box"><h3>Origin tracking</h3><div class="origin-note">${escapeHtml(data.message)}</div></div>`;
+        return;
+      }
+      currentOrigin = {
+        parsed: data.parsed,
+        meta: data.meta,
+        risk: data.risk,
+        context: data.context || context,   // merged: enrichment + journalist (journalist wins)
+        enrichment: data.enrichment || null,
+        ads: data.ads || null,
+        enrichment_status: data.enrichment_status || null,
+      };
+      renderOrigin();
+    } catch (e) {
+      area.innerHTML = `<div class="origin-box"><span class="status-line" style="color:var(--tier-false)">Network error: ${escapeHtml(e.message)}</span></div>`;
+      currentOrigin = null;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = prevLabel;
+    }
+  }
+
+  function renderOrigin() {
+    const area = $('#origin-area');
+    const { parsed, meta, risk, context, enrichment, ads } = currentOrigin;
+    const a = parsed.account || {};
+    const who = a.displayHint || a.handle || (a.numericId ? 'ID ' + a.numericId : 'Unknown account');
+
+    const notes = (parsed.notes || []).map((n) => `<div class="origin-note">• ${escapeHtml(n)}</div>`).join('');
+
+    // Provenance: did a hosted enrichment provider auto-fill the account data?
+    const SOURCE_LABEL = { apify: 'Apify', brightdata: 'Bright Data' };
+    const enrichLine = enrichment && enrichment.source
+      ? `<div class="origin-note" style="color:var(--tier-verified)">✓ Account details auto-filled from ${escapeHtml(SOURCE_LABEL[enrichment.source] || enrichment.source)} (logged-off public data — no Facebook login). Confirm/adjust below.</div>`
+      : '';
+
+    // Political ads (Meta Ad Library API) — funded amplification signal.
+    let adsBlock = '';
+    if (ads && ads.available) {
+      if (ads.ok && ads.count > 0) {
+        const fund = ads.funders && ads.funders.length ? ` · funded by ${ads.funders.map(escapeHtml).join(', ')}` : '';
+        const rows = (ads.sample || []).map((s) =>
+          `<div class="origin-note">• ${escapeHtml(s.started || '')}${s.spend ? ' · spend ' + escapeHtml(s.spend) : ''}${s.impressions ? ' · impressions ' + escapeHtml(s.impressions) : ''}${s.snapshot_url ? ` · <a href="${escapeHtml(s.snapshot_url)}" target="_blank" rel="noreferrer">view ad</a>` : ''}</div>`
+        ).join('');
+        adsBlock = `<div class="section" style="margin-top:0.7rem"><h3>Political ads (Meta Ad Library · ${escapeHtml(ads.country || 'ZM')})</h3>
+          <div class="origin-note"><strong>${ads.count}${ads.has_more ? '+' : ''} political/issue ad(s)</strong> from this page${fund}.</div>${rows}</div>`;
+      } else if (ads.ok) {
+        adsBlock = `<div class="section" style="margin-top:0.7rem"><h3>Political ads (Meta Ad Library)</h3><div class="origin-note">No political/issue ads found for this page in ${escapeHtml(ads.country || 'ZM')}.</div></div>`;
+      }
+    }
+
+    let metaLine;
+    if (meta && meta.blocked) metaLine = '<div class="origin-note">Facebook returned a login wall (expected) — no public preview available. The account identity above comes from the link itself.</div>';
+    else if (meta && (meta.title || meta.siteName)) metaLine = `<div class="origin-note">Link preview: <strong>${escapeHtml(meta.title || meta.siteName)}</strong>${meta.description ? ' — ' + escapeHtml(truncate(meta.description, 140)) : ''}</div>`;
+    else metaLine = '<div class="origin-note">No public preview available (Facebook blocks unauthenticated reads). Identity above is from the link.</div>';
+
+    const flags = (risk.flags || []).map((f) =>
+      `<div class="flag-row w-${escapeHtml(f.weight)}"><span class="wt">${escapeHtml(f.weight)} · ${escapeHtml(f.signal)}</span><div>${escapeHtml(f.observation)}</div></div>`
+    ).join('') || '<div class="origin-note">No origin red flags from the link alone. Add context below to sharpen this.</div>';
+
+    const cnd = (risk.could_not_determine || []).length
+      ? `<div class="section"><h3>Not readable without logging in</h3>${risk.could_not_determine.map((c) => `<div class="origin-note">• ${escapeHtml(c)}</div>`).join('')}</div>`
+      : '';
+
+    const c = context || {};
+    const hasContext = Object.values(c).some((v) => v === true || (typeof v === 'string' && v.trim()) || (Array.isArray(v) && v.length));
+    area.innerHTML = `
+      <div class="origin-box">
+        <h3>Where this came from</h3>
+        <div class="ident"><span class="who">${escapeHtml(who)}</span> <span class="pill">${escapeHtml(a.type || 'unknown')}</span> <span class="pill">${escapeHtml(parsed.kind)}</span>${context && context.category ? ` <span class="pill">${escapeHtml(context.category)}</span>` : ''}</div>
+        ${a.url ? `<div class="url" style="font-size:0.8rem;margin-top:0.2rem"><a href="${escapeHtml(a.url)}" target="_blank" rel="noreferrer">${escapeHtml(a.url)}</a></div>` : ''}
+        ${context && context.confirmed_owner ? `<div class="origin-note">Confirmed owner: <strong>${escapeHtml(context.confirmed_owner)}</strong></div>` : ''}
+        ${notes}
+        ${metaLine}
+        ${enrichLine}
+
+        <div class="section" style="margin-top:0.7rem"><h3>Account risk signals</h3>${flags}</div>
+        <div class="origin-note" style="margin-top:0.3rem"><em>${escapeHtml(risk.summary || '')}</em></div>
+        ${adsBlock}
+        ${cnd}
+
+        <details class="ctx"${hasContext ? ' open' : ''}>
+          <summary>Add context — what you can see on the page (sharpens the signals)</summary>
+          <div class="ctx-grid">
+            <div class="row-flex">
+              <div><label for="ctx-created">Page/account created</label><input type="text" id="ctx-created" placeholder="e.g. 2026-05-01" value="${escapeHtml(c.created_date || '')}" /></div>
+              <div><label for="ctx-admin">Admin country (Page Transparency)</label><input type="text" id="ctx-admin" placeholder="e.g. Russia / Zambia / unknown" value="${escapeHtml(c.admin_country || '')}" /></div>
+            </div>
+            <div class="row-flex">
+              <div><label for="ctx-followers">Followers</label><input type="text" id="ctx-followers" placeholder="e.g. 1200" value="${escapeHtml(c.followers || '')}" /></div>
+              <div><label for="ctx-following">Following</label><input type="text" id="ctx-following" placeholder="e.g. 4000" value="${escapeHtml(c.following || '')}" /></div>
+            </div>
+            <label for="ctx-namehist">Name history (one per line — Facebook lists past names)</label>
+            <textarea id="ctx-namehist" style="min-height:60px" placeholder="Past Page Name 1&#10;Past Page Name 2">${escapeHtml(Array.isArray(c.name_history) ? c.name_history.join('\n') : (c.name_history || ''))}</textarea>
+            <label style="display:inline-flex;align-items:center;gap:0.5rem;font-weight:400;margin-right:1rem"><input type="checkbox" id="ctx-adlib" ${c.ad_library_active ? 'checked' : ''} /> Ad Library shows active ads</label>
+            <label style="display:inline-flex;align-items:center;gap:0.5rem;font-weight:400;margin-right:1rem"><input type="checkbox" id="ctx-avatar" ${c.avatar_generic ? 'checked' : ''} /> Profile photo looks stock/default/AI</label>
+            <label style="display:inline-flex;align-items:center;gap:0.5rem;font-weight:400"><input type="checkbox" id="ctx-verified" ${c.verified ? 'checked' : ''} /> Has a verification badge</label>
+            <label for="ctx-notes" style="margin-top:0.5rem">Your notes (free text — included in the verification)</label>
+            <textarea id="ctx-notes" style="min-height:60px" placeholder="Anything else you noticed about the account or post.">${escapeHtml(c.notes || '')}</textarea>
+            <div style="margin-top:0.6rem"><button class="secondary" id="ctx-rerun" type="button">Re-check signals with this context</button></div>
+          </div>
+        </details>
+      </div>
+    `;
+    $('#ctx-rerun')?.addEventListener('click', () => inspectOrigin());
+  }
+
+  function gatherOriginContext() {
+    if (!$('#ctx-created')) return (currentOrigin && currentOrigin.context) || {};
+    return {
+      created_date: $('#ctx-created').value.trim(),
+      admin_country: $('#ctx-admin').value.trim(),
+      followers: $('#ctx-followers').value.trim(),
+      following: $('#ctx-following').value.trim(),
+      name_history: $('#ctx-namehist').value,
+      ad_library_active: $('#ctx-adlib').checked,
+      avatar_generic: $('#ctx-avatar').checked,
+      verified: $('#ctx-verified').checked,
+      notes: $('#ctx-notes').value.trim(),
+    };
   }
 
   async function loadCorpus() {

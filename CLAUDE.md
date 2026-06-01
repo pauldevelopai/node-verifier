@@ -46,6 +46,28 @@ Listen-mode routes (`/api/listener/*`) are attached through the **`mountRoutes`*
 hook; the wrapper closes over `getHost`/`hostFor` so each route uses a per-request,
 newsroom-scoped host.
 
+## Verify-mode origin tracking (Facebook)
+Verify mode can take a **Facebook post URL** and track WHERE it came from + whether
+the account looks dangerous/fake. Route: **`POST /api/inspect`** (`lib/inspect-routes.js`,
+mounted in BOTH entrypoints alongside the listener routes).
+- **`lib/facebook.js`** — native JS, no deps: `parseFacebookUrl` (identifies the
+  account/page + post id from the URL shape), `fetchFacebookMeta` (best-effort OG;
+  degrades to `{blocked}` behind FB's login wall), `accountRiskSignals` (transparent
+  heuristic panel — descriptive flags + weights, NO numeric score, same "editor
+  decides" philosophy as listener.js). This is the **local download's only path**.
+- **`lib/enrich.js`** — **HOSTED-ONLY**, behind server-managed env tokens, all
+  logged-off public data (NO Facebook login/cookies — on the right side of
+  *Meta v. Bright Data*). Auto-fills the journalist's "Add context" form:
+  **Apify** (primary), **Bright Data** (fallback) for page profile + transparency;
+  **Meta Ad Library API** for political-ad lookup. Tokens: `APIFY_TOKEN`,
+  `BRIGHTDATA_TOKEN`+`BRIGHTDATA_FB_DATASET_ID`, `META_ADLIB_TOKEN` (see `.env.example`).
+  With no token set, `enrichmentStatus()` is all-false and it's pure native fallback.
+  NB: scraper output field names drift — `enrich.js` extraction is deliberately
+  tolerant (`FIELD_KEYS` candidate lists); verify mappings once against a live token.
+The origin packet (parse + risk + merged context + enrichment + ads) rides along
+with the verify call (`postBrief`), is woven into the prompt (`formatOriginForPrompt`
+in verifier.js), and is stored on the claim as `account_origin`.
+
 ## public/
 The dashboard. Uses RELATIVE paths (`<script src="app.js">`, `fetch("api/…")`) so it
 works at `/` (local) and under `/nodes/verifier/app/` (hosted). All 17 fetches are

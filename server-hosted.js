@@ -20,6 +20,7 @@ import { dirname, join } from "node:path";
 import { createHostedServer } from "@developai/grounded-node-runtime";
 import * as handlers from "./lib/handlers.js";
 import { mountListenerRoutes } from "./lib/listener-routes.js";
+import { mountInspectRoutes } from "./lib/inspect-routes.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync(join(__dirname, "package.json"), "utf8"));
@@ -29,7 +30,10 @@ await createHostedServer({
   productName: "Election Watch",
   handlers,
   // Custom Listen-mode routes; hostFor(req) gives a per-request, newsroom-scoped host.
-  mountRoutes: (app, { hostFor }) => mountListenerRoutes(app, hostFor),
+  mountRoutes: (app, { hostFor }) => {
+    mountListenerRoutes(app, hostFor);
+    mountInspectRoutes(app, hostFor);
+  },
   nodeVersion: pkg.version,
   staticDir: join(__dirname, "public"),
 });

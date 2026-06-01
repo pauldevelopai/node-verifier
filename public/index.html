@@ -85,6 +85,20 @@
     .page-card .meta { font-size: 0.82rem; color: var(--muted); margin-top: 0.25rem; }
     .flag-row { padding: 0.5rem 0.75rem; background: #f4f1ea; border-radius: 4px; margin-bottom: 0.35rem; font-size: 0.9rem; }
     .flag-row .cat { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+    /* origin tracking panel */
+    .origin-box { border: 1px solid var(--line); border-radius: 8px; padding: 1rem 1.15rem; background: #fbfaf7; }
+    .origin-box h3 { margin: 0 0 0.3rem; font-size: 0.8rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .origin-box .ident { font-size: 0.95rem; }
+    .origin-box .ident .who { font-weight: 600; }
+    .flag-row.w-significant { border-left: 3px solid var(--tier-false); }
+    .flag-row.w-notable { border-left: 3px solid var(--tier-contested); }
+    .flag-row.w-minor { border-left: 3px solid var(--line); }
+    .flag-row.w-reassuring { border-left: 3px solid var(--tier-verified); }
+    .flag-row .wt { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+    .origin-note { font-size: 0.85rem; color: var(--muted); margin: 0.3rem 0; }
+    details.ctx { margin-top: 0.75rem; border-top: 1px dashed var(--line); padding-top: 0.6rem; }
+    details.ctx summary { cursor: pointer; font-size: 0.9rem; font-weight: 500; color: var(--accent); }
+    details.ctx .ctx-grid { margin-top: 0.6rem; }
     .brief-block { padding: 1rem 1.2rem; background: #f4f1ea; border-radius: 6px; margin-bottom: 0.85rem; }
     .brief-block h3 { margin: 0 0 0.4rem; font-size: 0.95rem; }
     .row-flex { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
@@ -164,7 +178,13 @@
         <input type="file" id="claim-image" accept="image/*" />
 
         <label for="claim-url">Source URL (optional)</label>
-        <input type="url" id="claim-url" placeholder="https://..." />
+        <div style="display:flex;gap:0.5rem;align-items:flex-start">
+          <input type="url" id="claim-url" placeholder="Paste the Facebook post link to track where it came from" style="flex:1" />
+          <button class="secondary" id="inspect-btn" type="button" style="white-space:nowrap">Track origin</button>
+        </div>
+        <p class="help" style="margin:0.35rem 0 0">Facebook links only, for now. We identify the account behind the post and flag origin risks. Most account data sits behind Facebook's login wall — add what you can see under "Add context".</p>
+
+        <div id="origin-area" style="display:none;margin-top:0.85rem"></div>
 
         <div style="margin-top:1rem">
           <button class="primary" id="verify-btn">Check this claim</button>
