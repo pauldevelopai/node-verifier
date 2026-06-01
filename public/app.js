@@ -161,8 +161,13 @@
     const reportArea = $('#report-area');
 
     if (!claimText && !file) {
-      status.textContent = 'Provide claim text, an image, or both.';
+      // A FB link alone can't be verified — the post body isn't readable. Say why
+      // and point the journalist at what to do, instead of a bare error.
+      status.innerHTML = sourceUrl
+        ? "Origin tracked — but to check whether it's <em>true</em>, the verifier needs the post's words. Facebook blocks reading the post body, so paste the claim here or upload a screenshot, then press Check this claim."
+        : 'Provide claim text, an image, or both.';
       status.style.color = 'var(--tier-false)';
+      $('#claim-text').focus();
       return;
     }
 
@@ -187,11 +192,14 @@
         accountOrigin = currentOrigin;
       }
 
+      // Prefer the resolved canonical post URL over a useless share token.
+      const effectiveUrl = (currentOrigin?.resolution?.resolved && currentOrigin.resolution.url) || sourceUrl || null;
+
       const result = await postJson('api/brief', {
         claimText: claimText || null,
         imageBase64,
         imageMimeType,
-        sourceUrl: sourceUrl || null,
+        sourceUrl: effectiveUrl,
         accountOrigin,
       });
 
@@ -320,6 +328,18 @@
         ? `<div class="origin-note">Tried to follow the share link but Facebook didn’t expose the destination (${escapeHtml(resolution.reason || 'blocked')}). Open it in a browser to see the origin.</div>`
         : '';
 
+    // Bridge: tracking found WHERE it came from — now hand off to checking WHETHER
+    // it's true. The post body usually can't be auto-read (Facebook login wall), so
+    // unless enrichment supplied the text, the journalist pastes the claim/screenshot.
+    const postText = (context && context.post_text) || '';
+    const verifyCta = postText
+      ? `<div class="section" style="margin-top:0.7rem"><h3>Now check if it's true</h3>
+           <div class="origin-note">We have the post's text. Run it through the live-web + corpus check.</div>
+           <div style="margin-top:0.5rem"><button class="primary" id="to-verify" type="button">Verify this post &rarr;</button></div></div>`
+      : `<div class="section" style="margin-top:0.7rem"><h3>Now check if it's true</h3>
+           <div class="origin-note">Tracking found <strong>where</strong> this came from. To check <strong>whether it's true</strong>, the verifier needs the post's words — Facebook blocks reading the post body automatically. Paste the claim in the box at the top (or upload a screenshot), then press <strong>Check this claim</strong>.</div>
+           <div style="margin-top:0.5rem"><button class="secondary" id="to-verify" type="button">Go to the claim box &uarr;</button></div></div>`;
+
     const notes = (parsed.notes || []).map((n) => `<div class="origin-note">• ${escapeHtml(n)}</div>`).join('');
 
     // Provenance: did a hosted enrichment provider auto-fill the account data?
@@ -375,6 +395,7 @@
         <div class="origin-note" style="margin-top:0.3rem"><em>${escapeHtml(risk.summary || '')}</em></div>
         ${adsBlock}
         ${cnd}
+        ${verifyCta}
 
         <details class="ctx"${hasContext ? ' open' : ''}>
           <summary>Add context — what you can see on the page (sharpens the signals)</summary>
@@ -400,6 +421,18 @@
       </div>
     `;
     $('#ctx-rerun')?.addEventListener('click', () => inspectOrigin());
+    $('#to-verify')?.addEventListener('click', () => {
+      const claimEl = $('#claim-text');
+      if (postText) {
+        // We already have the post's words — drop them in and run the check.
+        if (!claimEl.value.trim()) claimEl.value = postText;
+        verifyClaim();
+      } else {
+        // No readable body — send the journalist to the claim box to paste it.
+        claimEl.focus();
+        claimEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
   }
 
   function gatherOriginContext() {
