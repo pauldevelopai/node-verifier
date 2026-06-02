@@ -21,6 +21,8 @@ import { createHostedServer } from "@developai/grounded-node-runtime";
 import * as handlers from "./lib/handlers.js";
 import { mountListenerRoutes } from "./lib/listener-routes.js";
 import { mountInspectRoutes } from "./lib/inspect-routes.js";
+import { mountJudgeRoutes } from "./lib/judge-routes.js";
+import { mountHistoryRoutes } from "./lib/history-routes.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync(join(__dirname, "package.json"), "utf8"));
@@ -42,6 +44,8 @@ await createHostedServer({
     });
     mountListenerRoutes(app, hostFor);
     mountInspectRoutes(app, hostFor);
+    mountJudgeRoutes(app, hostFor);
+    mountHistoryRoutes(app, hostFor);
   },
   nodeVersion: pkg.version,
   staticDir: join(__dirname, "public"),

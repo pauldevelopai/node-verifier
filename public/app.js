@@ -25,6 +25,7 @@
     document.getElementById('app').style.display = 'block';
     wireApp();
     mountKeyUI();
+    loadHistory();
   }
 
   // ─── Welcome screen ───────────────────────────────────────────────
@@ -119,6 +120,35 @@
     $('#library-refresh').addEventListener('click', loadLibrary);
     $('#library-compare-btn').addEventListener('click', runComparison);
     $('#generate-brief-btn').addEventListener('click', generateBrief);
+
+    // History sidebar + detail view
+    $('#history-refresh').addEventListener('click', loadHistory);
+    $('#detail-back').addEventListener('click', () => {
+      const firstVisible = $$('nav button.tab').find((b) => !b.hidden);
+      if (firstVisible) activateTab(firstVisible);
+    });
+
+    // "Image attached" confirmation under the file inputs
+    wireImageInfo('#claim-image', '#claim-image-info');
+    wireImageInfo('#post-image', '#post-image-info');
+  }
+
+  function wireImageInfo(inputSel, infoSel) {
+    const input = $(inputSel), info = $(infoSel);
+    if (!input || !info) return;
+    input.addEventListener('change', () => {
+      const f = input.files && input.files[0];
+      if (!f) { info.className = 'file-info'; info.innerHTML = ''; return; }
+      const kb = Math.round(f.size / 1024);
+      const url = URL.createObjectURL(f);
+      info.className = 'file-info show';
+      info.innerHTML = `<img src="${url}" alt="preview" /><span class="ok">✓ Image attached</span><span>${escapeHtml(f.name)} · ${kb} KB</span><button type="button" class="clear-img">remove</button>`;
+      info.querySelector('.clear-img').addEventListener('click', () => {
+        input.value = '';
+        URL.revokeObjectURL(url);
+        info.className = 'file-info'; info.innerHTML = '';
+      });
+    });
   }
 
   function activateTab(btn) {
@@ -129,11 +159,9 @@
 
     const panel = btn.dataset.panel;
     if (panel === 'corpus') loadCorpus();
-    if (panel === 'history') loadHistory();
     if (panel === 'watchlist') loadWatchlist();
     if (panel === 'library') loadLibrary();
     if (panel === 'brief') loadBriefs();
-    if (panel === 'activity') loadActivity();
   }
 
   // ─── Verify mode: claim verification ──────────────────────────────
@@ -200,7 +228,8 @@
 
       const fetched = result.source_fetched ? ' · source page fetched' : '';
       status.textContent = `Done. Checked the live web${fetched}. Corpus: ${result.corpus_size} example(s).`;
-      renderReport(result.report, result.citations);
+      renderReport(result.report, result.citations, result.claim_id);
+      loadHistory();
     } catch (e) {
       status.textContent = 'Network error: ' + e.message;
       status.style.color = 'var(--tier-false)';
@@ -209,8 +238,14 @@
     }
   }
 
-  function renderReport(report, citations) {
+  function renderReport(report, citations, resultId) {
     const area = $('#report-area');
+    area.innerHTML = reportHtml(report, citations) + feedbackHtml();
+    area.style.display = 'block';
+    wireFeedback(area, 'verify', resultId);
+  }
+
+  function reportHtml(report, citations) {
     const tierClass = 'tier-' + (report.tier || '').replace(/ /g, '.');
     const matching = (report.matching_examples || [])
       .map((m) => `<li><code>${escapeHtml(m.filename)}</code> — ${escapeHtml(m.why_it_matches)}</li>`).join('');
@@ -235,7 +270,7 @@
     });
     const sources = sourceItems.join('');
 
-    area.innerHTML = `
+    return `
       <div class="section">
         <span class="tier-badge ${tierClass}">${escapeHtml(report.tier || '')}</span>
         <span style="margin-left:0.6rem;color:var(--muted);font-size:0.9rem">${escapeHtml(report.tier_reason || '')}</span>
@@ -250,7 +285,6 @@
       ${checks ? `<div class="section"><h3>Further checks</h3><ul>${checks}</ul></div>` : ''}
       ${report.draft_response ? `<div class="section"><h3>Suggested draft response</h3><div class="draft">${escapeHtml(report.draft_response)}</div></div>` : ''}
     `;
-    area.style.display = 'block';
   }
 
   // ─── Verify mode: source-account origin tracking (Facebook) ───────
@@ -282,6 +316,7 @@
         return;
       }
       currentOrigin = {
+        origin_id: data.origin_id || null,
         parsed: data.parsed,
         meta: data.meta,
         risk: data.risk,
@@ -291,6 +326,7 @@
         enrichment_status: data.enrichment_status || null,
       };
       renderOrigin();
+      loadHistory();
     } catch (e) {
       area.innerHTML = `<div class="origin-box"><span class="status-line" style="color:var(--tier-false)">Network error: ${escapeHtml(e.message)}</span></div>`;
       currentOrigin = null;
@@ -403,8 +439,10 @@
             <div style="margin-top:0.6rem"><button class="secondary" id="ctx-rerun" type="button">Re-check signals with this context</button></div>
           </div>
         </details>
+        ${feedbackHtml()}
       </div>
     `;
+    wireFeedback(area, 'origin', currentOrigin.origin_id, currentOrigin.feedback);
     $('#ctx-rerun')?.addEventListener('click', () => inspectOrigin());
     $('#to-verify')?.addEventListener('click', () => {
       const claimEl = $('#claim-text');
@@ -468,40 +506,106 @@
     }
   }
 
+  // ─── History sidebar (all result types, clickable to full detail) ──
+  const FB_ICON = { approve: '👍', disapprove: '👎' };
+  let historyIndex = {};   // `${type}:${id}` → full item (incl. detail), for click
+
   async function loadHistory() {
-    const status = $('#history-status');
-    const metrics = $('#history-metrics');
-    const list = $('#history-list');
-    status.textContent = 'Loading…';
-    metrics.innerHTML = '';
-    list.innerHTML = '';
-
-    const [report, quality] = await Promise.all([fetchJson('api/report'), fetchJson('api/quality')]);
-
-    metrics.innerHTML = `
-      <div class="metric"><div class="label">Total checked</div><div class="value">${quality.total_claims_checked}</div></div>
-      <div class="metric"><div class="label">Verified</div><div class="value">${quality.by_tier.VERIFIED}</div></div>
-      <div class="metric"><div class="label">Contested</div><div class="value">${quality.by_tier.CONTESTED}</div></div>
-      <div class="metric"><div class="label">Likely false</div><div class="value">${quality.by_tier['LIKELY FALSE']}</div></div>
-    `;
-
-    if (report.recent.length === 0) {
-      status.innerHTML = '<span class="empty">No claims checked yet.</span>';
-      return;
+    const body = $('#history-rail-body');
+    try {
+      const data = await fetchJson('api/history');
+      renderHistoryRail(data.groups || []);
+    } catch (e) {
+      body.innerHTML = '<div class="rail-empty">Could not load history.</div>';
     }
-    status.textContent = `Showing the ${report.recent.length} most recent checks.`;
-    report.recent.forEach((c) => {
-      const tier = c.report?.tier || '—';
-      const restated = c.report?.claim_restated || c.claim_text || '(image only)';
-      const div = document.createElement('div');
-      div.className = 'recent-claim';
-      div.innerHTML = `
-        <div class="when">${new Date(c.timestamp).toLocaleString()}</div>
-        <div class="claim">${escapeHtml(restated)}</div>
-        <span class="tier-badge tier-${tier.replace(/ /g, '.')}">${escapeHtml(tier)}</span>
-      `;
-      list.appendChild(div);
+  }
+
+  function renderHistoryRail(groups) {
+    const body = $('#history-rail-body');
+    historyIndex = {};
+    const total = groups.reduce((n, g) => n + ((g.items && g.items.length) || 0), 0);
+    if (!total) { body.innerHTML = '<div class="rail-empty">No queries yet. Your results will appear here.</div>'; return; }
+    body.innerHTML = '';
+    groups.forEach((g) => {
+      if (!g.items || !g.items.length) return;
+      const h = document.createElement('div');
+      h.className = 'rail-group-title';
+      h.textContent = `${g.label} · ${g.items.length}`;
+      body.appendChild(h);
+      g.items.forEach((it) => {
+        const key = `${g.type}:${it.id}`;
+        historyIndex[key] = { ...it, type: g.type };
+        const btn = document.createElement('button');
+        btn.className = 'rail-item';
+        btn.type = 'button';
+        btn.dataset.key = key;
+        const when = it.when ? new Date(it.when).toLocaleDateString() : '';
+        const fb = it.feedback && it.feedback.verdict ? `<span class="ri-fb" title="You rated this">${FB_ICON[it.feedback.verdict] || ''}</span>` : '';
+        btn.innerHTML = `
+          <div class="ri-title">${escapeHtml(truncate(it.title || '(untitled)', 90))}</div>
+          <div class="ri-meta">${it.badge ? `<span class="ri-badge">${escapeHtml(it.badge)}</span>` : ''}<span>${escapeHtml(when)}</span>${fb}</div>`;
+        btn.addEventListener('click', () => openHistoryDetail(key, btn));
+        body.appendChild(btn);
+      });
     });
+  }
+
+  function openHistoryDetail(key, btn) {
+    const item = historyIndex[key];
+    if (!item) return;
+    $$('.rail-item').forEach((b) => b.classList.toggle('active', b === btn));
+    const body = $('#detail-body');
+    body.innerHTML = detailHtmlFor(item) + feedbackHtml();
+    showDetailPanel();
+    // history type strings match the judge result_type values exactly.
+    wireFeedback(body, item.type, item.id, item.feedback);
+  }
+
+  function showDetailPanel() {
+    $$('.panel').forEach((p) => p.classList.toggle('active', p.id === 'panel-detail'));
+    $$('nav button.tab').forEach((b) => b.classList.remove('active'));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function detailHtmlFor(item) {
+    const d = item.detail || {};
+    const when = item.when ? new Date(item.when).toLocaleString() : '';
+    const head = (kind, title) =>
+      `<div style="margin-bottom:0.6rem"><span class="pill">${escapeHtml(kind)}</span> <span style="color:var(--muted);font-size:0.82rem">${escapeHtml(when)}</span><h2 style="margin:0.4rem 0 0">${escapeHtml(title)}</h2></div>`;
+    if (item.type === 'verify') {
+      const src = d.source_url ? `<div class="origin-note">Source: <a href="${escapeHtml(d.source_url)}" target="_blank" rel="noreferrer">${escapeHtml(d.source_url)}</a></div>` : '';
+      const ao = d.account_origin;
+      const origin = ao ? originDetailHtml({ account: ao.parsed?.account, notes: ao.parsed?.notes, risk_summary: ao.risk?.summary, context: ao.context }) : '';
+      return head('Claim check', d.report?.claim_restated || d.claim_text || '(image only)') + src + reportHtml(d.report || {}, d.citations || []) + origin;
+    }
+    if (item.type === 'origin') return head('Origin track', item.title) + originDetailHtml(d);
+    if (item.type === 'listen_analyze') {
+      const txt = d.post_text ? `<div class="origin-note">“${escapeHtml(truncate(d.post_text, 400))}”</div>` : '';
+      return head('Post analysis', item.title) + txt + riskProfileHtml(d.risk_profile || {});
+    }
+    if (item.type === 'listen_compare') return head('Comparison', item.title) + comparisonHtml(d.comparison || {});
+    return '<div class="empty">Nothing to show.</div>';
+  }
+
+  function originDetailHtml(o) {
+    if (!o) return '';
+    const a = o.account || {};
+    const who = a.displayHint || a.handle || a.url || 'account';
+    const notes = (o.notes || []).map((n) => `<div class="origin-note">• ${escapeHtml(n)}</div>`).join('');
+    const c = o.context || {};
+    const rows = [];
+    if (c.admin_country) rows.push(`Admin country: ${c.admin_country}`);
+    if (c.created_date) rows.push(`Created: ${c.created_date}`);
+    if (c.followers || c.following) rows.push(`Followers/following: ${c.followers ?? '?'} / ${c.following ?? '?'}`);
+    if (c.confirmed_owner) rows.push(`Confirmed owner: ${c.confirmed_owner}`);
+    const ctx = rows.length ? `<div class="origin-note">${rows.map(escapeHtml).join(' · ')}</div>` : '';
+    return `<div class="origin-box" style="margin-top:0.8rem">
+      <h3>Where this came from</h3>
+      <div class="ident"><span class="who">${escapeHtml(who)}</span>${a.type ? ` <span class="pill">${escapeHtml(a.type)}</span>` : ''}</div>
+      ${a.url ? `<div class="url" style="font-size:0.8rem;margin-top:0.2rem"><a href="${escapeHtml(a.url)}" target="_blank" rel="noreferrer">${escapeHtml(a.url)}</a></div>` : ''}
+      ${ctx}${notes}
+      ${o.risk_summary ? `<div class="origin-note" style="margin-top:0.3rem"><em>${escapeHtml(o.risk_summary)}</em></div>` : ''}
+    </div>`;
   }
 
   // ─── Listen mode: watchlist ──────────────────────────────────────
@@ -611,7 +715,8 @@
         return;
       }
       status.textContent = `Done. Saved to Library.`;
-      renderRiskProfile(result.profile);
+      renderRiskProfile(result.profile, result.stored_id);
+      loadHistory();
     } catch (e) {
       status.textContent = 'Network error: ' + e.message;
       status.style.color = 'var(--tier-false)';
@@ -620,8 +725,14 @@
     }
   }
 
-  function renderRiskProfile(profile) {
+  function renderRiskProfile(profile, resultId) {
     const area = $('#profile-area');
+    area.innerHTML = riskProfileHtml(profile) + feedbackHtml();
+    area.style.display = 'block';
+    wireFeedback(area, 'listen_analyze', resultId);
+  }
+
+  function riskProfileHtml(profile) {
     const confClass = 'conf-' + (profile.confidence || '').replace(/ /g, '.');
     const flags = (profile.flags || []).map((f) => `
       <div class="flag-row">
@@ -632,7 +743,7 @@
     const why = (profile.why_chain || []).map((s) => `<li>${escapeHtml(s)}</li>`).join('');
     const checks = (profile.further_checks || []).map((s) => `<li>${escapeHtml(s)}</li>`).join('');
 
-    area.innerHTML = `
+    return `
       <div class="section">
         <span class="conf-badge ${confClass}">${escapeHtml(profile.confidence || '')}</span>
         <span style="margin-left:0.6rem;color:var(--muted);font-size:0.9rem">${escapeHtml(profile.confidence_reason || '')}</span>
@@ -647,7 +758,6 @@
       ${profile.what_NOT_to_publish ? `<div class="section"><h3>What NOT to publish</h3><div class="warn">${escapeHtml(profile.what_NOT_to_publish)}</div></div>` : ''}
       ${profile.editorial_lead ? `<div class="section"><h3>Editorial lead</h3><div class="draft">${escapeHtml(profile.editorial_lead)}</div></div>` : ''}
     `;
-    area.style.display = 'block';
   }
 
   // ─── Listen mode: library + compare ──────────────────────────────
@@ -725,11 +835,18 @@
       return;
     }
     status.textContent = `Compared ${selectedPostIds.size} posts.`;
-    renderComparison(result.comparison);
+    renderComparison(result.comparison, result.comparison_id);
+    loadHistory();
   }
 
-  function renderComparison(c) {
+  function renderComparison(c, resultId) {
     const area = $('#compare-area');
+    area.innerHTML = comparisonHtml(c) + feedbackHtml();
+    area.style.display = 'block';
+    wireFeedback(area, 'listen_compare', resultId);
+  }
+
+  function comparisonHtml(c) {
     const verdictClass = 'conf-' + (c.verdict || '').replace(/ /g, '.');
     const overlap = (c.overlap_findings || []).map((f) => `
       <div class="flag-row">
@@ -741,7 +858,7 @@
     const divergences = (c.divergences || []).map((s) => `<li>${escapeHtml(s)}</li>`).join('');
     const checks = (c.further_checks || []).map((s) => `<li>${escapeHtml(s)}</li>`).join('');
 
-    area.innerHTML = `
+    return `
       <div class="section">
         <span class="conf-badge ${verdictClass}">${escapeHtml(c.verdict || '')}</span>
         <span style="margin-left:0.6rem;color:var(--muted);font-size:0.9rem">${escapeHtml(c.verdict_reason || '')}</span>
@@ -752,7 +869,6 @@
       ${checks ? `<div class="section"><h3>Further checks</h3><ul>${checks}</ul></div>` : ''}
       ${c.publishable_now ? `<div class="section"><h3>What's publishable now</h3><div class="draft">${escapeHtml(c.publishable_now)}</div></div>` : ''}
     `;
-    area.style.display = 'block';
   }
 
   // ─── Listen mode: weekly brief ───────────────────────────────────
@@ -836,30 +952,6 @@
     });
   }
 
-  // ─── Shared: activity ────────────────────────────────────────────
-
-  async function loadActivity() {
-    const list = $('#activity-list');
-    list.innerHTML = '<span class="status-line">Loading…</span>';
-    const entries = await fetchJson('api/activity');
-    if (!Array.isArray(entries) || entries.length === 0) {
-      list.innerHTML = '<span class="empty">No activity recorded yet.</span>';
-      return;
-    }
-    list.innerHTML = '';
-    entries.slice(-100).reverse().forEach((e) => {
-      const div = document.createElement('div');
-      div.className = 'activity-row';
-      const when = e.timestamp ? new Date(e.timestamp).toLocaleString() : '—';
-      const extras = Object.entries(e)
-        .filter(([k]) => !['timestamp', 'op'].includes(k))
-        .map(([k, v]) => `${k}=${typeof v === 'object' ? JSON.stringify(v) : v}`)
-        .join(' · ');
-      div.innerHTML = `<span class="when">${when}</span> — <strong>${escapeHtml(e.op || 'event')}</strong>${extras ? ' · ' + escapeHtml(extras) : ''}`;
-      list.appendChild(div);
-    });
-  }
-
   // ─── Helpers ──────────────────────────────────────────────────────
 
   async function fetchJson(url) {
@@ -896,6 +988,68 @@
   function truncate(s, n) {
     if (!s) return '';
     return s.length > n ? s.slice(0, n - 1) + '…' : s;
+  }
+
+  // ─── Approve / disapprove on a result → the learning DB (/api/judge) ──
+  // Every result type gets the same control. Approve confirms the result (and,
+  // for claims/posts, promotes it into the trusted corpus). Disapprove opens a
+  // correction box; the note is fed into future similar checks.
+  function feedbackHtml() {
+    return `
+      <div class="result-feedback" data-fb>
+        <span class="fb-q">Was this useful and correct?</span>
+        <button class="fb-btn approve" data-fb-verdict="approve" type="button">👍 Approve</button>
+        <button class="fb-btn disapprove" data-fb-verdict="disapprove" type="button">👎 Disapprove</button>
+        <div class="fb-correction" data-fb-correction>
+          <textarea placeholder="What was wrong? Your correction trains the Node (optional)."></textarea>
+          <div style="margin-top:0.4rem"><button class="secondary" data-fb-submit type="button">Save correction</button></div>
+        </div>
+        <span class="fb-learn">Your rating is stored and fed into future similar checks — approvals also become trusted examples.</span>
+      </div>`;
+  }
+
+  function wireFeedback(container, resultType, resultId, existing) {
+    const root = container && container.querySelector('[data-fb]');
+    if (!root) return;
+    if (!resultId) { root.remove(); return; }   // nothing to attach a verdict to
+    const approveBtn = root.querySelector('.fb-btn.approve');
+    const disapproveBtn = root.querySelector('.fb-btn.disapprove');
+    const corr = root.querySelector('[data-fb-correction]');
+    const corrText = corr.querySelector('textarea');
+    const learn = root.querySelector('.fb-learn');
+    let current = existing && existing.verdict ? existing.verdict : null;
+    if (existing && existing.correction) corrText.value = existing.correction;
+
+    const paint = () => {
+      approveBtn.classList.toggle('active', current === 'approve');
+      disapproveBtn.classList.toggle('active', current === 'disapprove');
+      corr.style.display = current === 'disapprove' ? 'block' : 'none';
+    };
+    paint();
+
+    async function send(verdict) {
+      current = verdict;
+      paint();
+      try {
+        const r = await postJson('api/judge', {
+          result_type: resultType, result_id: resultId, verdict,
+          correction: corrText.value.trim() || null,
+        });
+        if (r && r.ok) {
+          learn.textContent = verdict === 'approve'
+            ? (r.promoted ? '✓ Saved — added to the trusted corpus and the learning record.' : '✓ Saved to the Node’s learning record.')
+            : '✓ Correction saved — the Node will weigh this next time.';
+        } else {
+          learn.textContent = (r && r.message) || 'Could not save that rating.';
+        }
+      } catch (e) {
+        learn.textContent = 'Network error saving the rating.';
+      }
+    }
+
+    approveBtn.addEventListener('click', () => send('approve'));
+    disapproveBtn.addEventListener('click', () => { current = 'disapprove'; paint(); corrText.focus(); send('disapprove'); });
+    corr.querySelector('[data-fb-submit]').addEventListener('click', () => send('disapprove'));
   }
 
   // ─── Reusable API-key UX (shared across Nodes — keep in sync with node-template) ──

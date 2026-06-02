@@ -36,7 +36,34 @@
     nav button.active { color: var(--fg); border-bottom-color: var(--accent); font-weight: 500; }
     nav button.mode-listen.active { border-bottom-color: var(--accent-2); }
     nav button[hidden] { display: none; }
-    main { padding: 1.5rem 2rem 3rem; max-width: 960px; margin: 0 auto; }
+    /* layout: history sidebar + main */
+    .app-body { display: flex; align-items: flex-start; }
+    #history-rail { flex: 0 0 268px; width: 268px; align-self: stretch; box-sizing: border-box;
+      border-right: 1px solid var(--line); background: #fbfaf7; padding: 1rem 0.9rem;
+      position: sticky; top: 0; max-height: 100vh; overflow: auto; }
+    #history-rail .rail-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+    #history-rail .rail-title { font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+    .rail-refresh { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 1.05rem; line-height: 1; }
+    .rail-group-title { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin: 0.9rem 0 0.25rem; }
+    .rail-item { display: block; width: 100%; text-align: left; background: none; border: 1px solid transparent; border-radius: 6px; padding: 0.45rem 0.5rem; cursor: pointer; font-family: inherit; }
+    .rail-item:hover { background: #f1eee6; }
+    .rail-item.active { background: #fff; border-color: var(--line); }
+    .rail-item .ri-title { font-size: 0.85rem; color: var(--fg); line-height: 1.3; }
+    .rail-item .ri-meta { font-size: 0.7rem; color: var(--muted); margin-top: 0.2rem; display: flex; gap: 0.4rem; align-items: center; }
+    .rail-item .ri-badge { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; padding: 0.05rem 0.4rem; border-radius: 999px; background: #ece8df; color: var(--muted); }
+    .rail-item .ri-fb { margin-left: auto; font-size: 0.8rem; }
+    .rail-empty { color: var(--muted); font-style: italic; font-size: 0.82rem; padding: 0.3rem 0; }
+    /* selected-image confirmation */
+    .file-info { font-size: 0.8rem; color: var(--muted); margin-top: 0.45rem; display: none; align-items: center; gap: 0.55rem; }
+    .file-info.show { display: flex; }
+    .file-info img { width: 46px; height: 46px; object-fit: cover; border-radius: 4px; border: 1px solid var(--line); }
+    .file-info .clear-img { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 0.8rem; font-family: inherit; padding: 0; }
+    .file-info .ok { color: var(--tier-verified); font-weight: 600; }
+    main { flex: 1 1 auto; min-width: 0; padding: 1.5rem 2rem 3rem; max-width: 960px; margin: 0 auto; }
+    @media (max-width: 780px) {
+      .app-body { flex-direction: column; }
+      #history-rail { flex: none; width: auto; align-self: stretch; border-right: none; border-bottom: 1px solid var(--line); position: static; max-height: 240px; }
+    }
     .panel { display: none; }
     .panel.active { display: block; }
     .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1rem; }
@@ -101,6 +128,25 @@
     details.ctx .ctx-grid { margin-top: 0.6rem; }
     .brief-block { padding: 1rem 1.2rem; background: #f4f1ea; border-radius: 6px; margin-bottom: 0.85rem; }
     .brief-block h3 { margin: 0 0 0.4rem; font-size: 0.95rem; }
+    /* Verify inputs — three equal tiles, two equal actions */
+    .input-stack { display: flex; flex-direction: column; gap: 0.85rem; }
+    .input-tile { border: 1px solid var(--line); border-radius: 8px; padding: 0.85rem 1rem; background: #fdfcf9; }
+    .input-tile .tile-label { display: block; font-weight: 600; font-size: 0.92rem; }
+    .input-tile .tile-hint { margin: 0.1rem 0 0.55rem; color: var(--muted); font-size: 0.8rem; }
+    .input-tile textarea { min-height: 80px; }
+    .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1.1rem; }
+    .action-row button { width: 100%; font-size: 1rem; padding: 0.7rem 1rem; }
+    @media (max-width: 520px) { .action-row { grid-template-columns: 1fr; } }
+    /* approve / disapprove on a result */
+    .result-feedback { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-top: 1.1rem; padding-top: 0.85rem; border-top: 1px solid var(--line); }
+    .result-feedback .fb-q { font-size: 0.85rem; color: var(--muted); }
+    .fb-btn { border: 1px solid var(--line); background: var(--card); color: var(--fg); padding: 0.35rem 0.85rem; border-radius: 999px; font-size: 0.85rem; cursor: pointer; font-family: inherit; }
+    .fb-btn.approve.active { background: #e3f0e5; border-color: #bcd9c1; color: var(--tier-verified); font-weight: 600; }
+    .fb-btn.disapprove.active { background: #f0d8d8; border-color: #dcbcbc; color: var(--tier-false); font-weight: 600; }
+    .fb-correction { flex: 1 1 100%; margin-top: 0.5rem; display: none; }
+    .fb-correction textarea { min-height: 52px; }
+    .fb-done { font-size: 0.82rem; color: var(--tier-verified); }
+    .fb-learn { font-size: 0.78rem; color: var(--muted); flex: 1 1 100%; margin-top: 0.2rem; }
     .row-flex { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
     .pill { display: inline-block; padding: 0.1rem 0.55rem; background: #eef3f8; color: var(--accent); border-radius: 999px; font-size: 0.72rem; font-weight: 500; margin-right: 0.3rem; }
     /* welcome screen */
@@ -151,46 +197,60 @@
     <!-- Verify-mode tabs -->
     <button class="tab mode-verify active" data-panel="verify" data-mode="verify">Check a claim</button>
     <button class="tab mode-verify" data-panel="corpus" data-mode="verify">Past examples</button>
-    <button class="tab mode-verify" data-panel="history" data-mode="verify">History</button>
     <!-- Listen-mode tabs -->
     <button class="tab mode-listen" data-panel="watchlist" data-mode="listen" hidden>Watchlist</button>
     <button class="tab mode-listen" data-panel="submit" data-mode="listen" hidden>Analyse a post</button>
     <button class="tab mode-listen" data-panel="library" data-mode="listen" hidden>Library</button>
     <button class="tab mode-listen" data-panel="compare" data-mode="listen" hidden>Compare</button>
     <button class="tab mode-listen" data-panel="brief" data-mode="listen" hidden>Weekly brief</button>
-    <!-- Shared -->
-    <button class="tab" data-panel="activity">Activity</button>
   </nav>
 
-  <main>
+  <div class="app-body">
+    <aside id="history-rail">
+      <div class="rail-head">
+        <span class="rail-title">History</span>
+        <button class="rail-refresh" id="history-refresh" type="button" title="Refresh history">↻</button>
+      </div>
+      <div id="history-rail-body"><span class="status-line">Loading…</span></div>
+    </aside>
+
+    <main>
 
     <!-- ─── VERIFY MODE ────────────────────────────────────────── -->
 
     <section id="panel-verify" class="panel active">
       <div class="card">
-        <h2>Check a suspect claim</h2>
-        <p class="help">Paste the claim text below, attach a screenshot if you have one, and optionally include the source URL. The AI will return a structured verification report comparing the claim against your past examples.</p>
+        <h2>Suspect content</h2>
+        <p class="help">Give us any one of these — or all three. Then choose what to do: track where it came from, check whether it's true, or both.</p>
 
-        <label for="claim-text">Claim text</label>
-        <textarea id="claim-text" placeholder="Paste the suspect claim here. If you only have a screenshot, leave this blank and upload below."></textarea>
+        <div class="input-stack">
+          <div class="input-tile">
+            <span class="tile-label">Text</span>
+            <p class="tile-hint">Paste the words of the claim or post.</p>
+            <textarea id="claim-text" placeholder="Paste the suspect text here…"></textarea>
+          </div>
 
-        <label for="claim-image">Screenshot (optional)</label>
-        <input type="file" id="claim-image" accept="image/*" />
+          <div class="input-tile">
+            <span class="tile-label">Image</span>
+            <p class="tile-hint">Upload a screenshot — we read the text and Facebook UI cues.</p>
+            <input type="file" id="claim-image" accept="image/*" />
+            <div id="claim-image-info" class="file-info"></div>
+          </div>
 
-        <label for="claim-url">Source URL (optional)</label>
-        <div style="display:flex;gap:0.5rem;align-items:flex-start">
-          <input type="url" id="claim-url" placeholder="Paste the Facebook post link to track where it came from" style="flex:1" />
-          <button class="secondary" id="inspect-btn" type="button" style="white-space:nowrap">Track origin</button>
+          <div class="input-tile">
+            <span class="tile-label">Facebook link</span>
+            <p class="tile-hint">Paste the post link to identify the account behind it. Facebook links only, for now.</p>
+            <input type="url" id="claim-url" placeholder="https://facebook.com/…" />
+          </div>
         </div>
-        <p class="help" style="margin:0.35rem 0 0">Facebook links only, for now. We identify the account behind the post and flag origin risks. Most account data sits behind Facebook's login wall — add what you can see under "Add context".</p>
 
-        <div id="origin-area" style="display:none;margin-top:0.85rem"></div>
-
-        <div style="margin-top:1rem">
-          <button class="primary" id="verify-btn">Check this claim</button>
-          <span id="verify-status" class="status-line" style="margin-left:0.75rem"></span>
+        <div class="action-row">
+          <button class="primary alt" id="inspect-btn" type="button">Track origin</button>
+          <button class="primary" id="verify-btn">Check claim</button>
         </div>
+        <div class="status-line" id="verify-status" style="margin-top:0.6rem"></div>
 
+        <div id="origin-area" style="display:none;margin-top:1rem"></div>
         <div id="report-area" class="report" style="display:none"></div>
       </div>
     </section>
@@ -210,15 +270,6 @@
         <div style="margin-top:0.75rem">
           <button class="primary" id="add-example-btn">Add to corpus</button>
         </div>
-      </div>
-    </section>
-
-    <section id="panel-history" class="panel">
-      <div class="card">
-        <h2>Verification history</h2>
-        <div id="history-status" class="status-line">Loading…</div>
-        <div class="metric-grid" id="history-metrics"></div>
-        <div id="history-list" style="margin-top:1rem"></div>
       </div>
     </section>
 
@@ -275,6 +326,7 @@
 
         <label for="post-image">Screenshot of the post (optional)</label>
         <input type="file" id="post-image" accept="image/*" />
+        <div id="post-image-info" class="file-info"></div>
 
         <div class="row-flex">
           <div>
@@ -339,17 +391,17 @@
       </div>
     </section>
 
-    <!-- ─── SHARED ─────────────────────────────────────────────── -->
+    <!-- ─── DETAIL (opened from the history sidebar) ───────────── -->
 
-    <section id="panel-activity" class="panel">
+    <section id="panel-detail" class="panel">
       <div class="card">
-        <h2>Activity log</h2>
-        <p class="help">Every action this Node has taken — verifications, watchlist updates, origin analyses, comparisons, briefs. Committed to your fork so Develop AI can help you improve the Node based on real usage.</p>
-        <div id="activity-list"><span class="status-line">Loading…</span></div>
+        <button class="secondary" id="detail-back" type="button">← Back</button>
+        <div id="detail-body" style="margin-top:1rem"></div>
       </div>
     </section>
 
-  </main>
+    </main>
+  </div>
 </div>
 
 <script src="app.js"></script>

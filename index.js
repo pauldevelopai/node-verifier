@@ -16,6 +16,8 @@ import * as handlers from './lib/handlers.js';
 import { ensureCorpusReady } from './lib/corpus.js';
 import { mountListenerRoutes } from './lib/listener-routes.js';
 import { mountInspectRoutes } from './lib/inspect-routes.js';
+import { mountJudgeRoutes } from './lib/judge-routes.js';
+import { mountHistoryRoutes } from './lib/history-routes.js';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -51,6 +53,12 @@ async function main() {
 
   // Verify-mode origin tracking: /api/inspect (Facebook URL → account + risk).
   mountInspectRoutes(app, () => host);
+
+  // Learning DB: /api/judge (approve/disapprove a result → improves the Node).
+  mountJudgeRoutes(app, () => host);
+
+  // Unified history feed for the left sidebar: /api/history.
+  mountHistoryRoutes(app, () => host);
 }
 
 main().catch((err) => {
