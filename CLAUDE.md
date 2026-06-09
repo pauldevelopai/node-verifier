@@ -74,8 +74,8 @@ works at `/` (local) and under `/nodes/verifier/app/` (hosted). All 17 fetches a
 relative — if you add one, keep it relative or it 404s against the tracker.
 
 ## Deps & deploy
-`@developai/grounded-node-runtime` (pinned `#v0.9.0` — host.store + mountRoutes need
-v0.9.0) + dotenv. Box: `cd /home/ubuntu/node-verifier && git pull && rm -rf node_modules/@developai && npm install && pm2 restart verifier-hosted`. `.env` (never
+`@developai/grounded-node-runtime` (pinned `#v0.14.0` — host.store + mountRoutes need
+≥v0.9.0) + dotenv. Box: `cd /home/ubuntu/node-verifier && git pull && rm -rf node_modules/@developai && npm install && pm2 restart verifier-hosted`. `.env` (never
 committed) needs `JWT_SECRET` matching the tracker + a real `sk-ant-` `ANTHROPIC_API_KEY`
 + `DATABASE_URL`. NB: the README, launchers, and update.mjs are local-install only —
 changing them needs no box redeploy of the hosted service.

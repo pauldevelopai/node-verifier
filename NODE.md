@@ -10,8 +10,8 @@ this Node within it.
 |---|---|
 | **Slug** | `capitalfm-verifier` *(retained from v0.1; scope has since broadened)* |
 | **Display name** | Election Watch |
-| **Current version** | 0.2.0 |
-| **Status** | build |
+| **Current version** | 0.3.0 |
+| **Status** | live (hosted on the box; `/nodes/verifier/app/`) |
 | **Born** | 2026-05-20 (verifier); 2026-05-20 (listener added) |
 | **Pilot newsroom** | A Zambian newsroom |
 | **Repo** | `pauldevelopai/node-verifier` (public) |
