@@ -123,6 +123,7 @@
 
     // History sidebar + detail view
     $('#history-refresh').addEventListener('click', loadHistory);
+    $('#dashboard-refresh').addEventListener('click', loadDashboard);
     $('#detail-back').addEventListener('click', () => {
       const firstVisible = $$('nav button.tab').find((b) => !b.hidden);
       if (firstVisible) activateTab(firstVisible);
@@ -158,6 +159,7 @@
     );
 
     const panel = btn.dataset.panel;
+    if (panel === 'dashboard') loadDashboard();
     if (panel === 'corpus') loadCorpus();
     if (panel === 'watchlist') loadWatchlist();
     if (panel === 'library') loadLibrary();
@@ -471,6 +473,120 @@
       verified: $('#ctx-verified').checked,
       notes: $('#ctx-notes').value.trim(),
     };
+  }
+
+  // ─── Dashboard: analytics + misinformation trend ─────────────────
+  function deltaHtml(now, prev) {
+    if (prev === 0 && now === 0) return '<span class="delta flat">no change</span>';
+    if (prev === 0) return `<span class="delta up">▲ new activity</span>`;
+    const pct = Math.round(((now - prev) / prev) * 100);
+    if (pct === 0) return '<span class="delta flat">± same as prev. 7 days</span>';
+    const dir = pct > 0 ? 'up' : 'down';
+    const arrow = pct > 0 ? '▲' : '▼';
+    return `<span class="delta ${dir}">${arrow} ${Math.abs(pct)}% vs prev. 7 days</span>`;
+  }
+
+  function fmtDay(iso) {
+    // "2026-08-03" → "3 Aug"
+    const d = new Date(iso + 'T00:00:00Z');
+    if (isNaN(d.getTime())) return iso;
+    return `${d.getUTCDate()} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getUTCMonth()]}`;
+  }
+
+  async function loadDashboard() {
+    const body = $('#dashboard-body');
+    body.innerHTML = '<span class="status-line">Loading…</span>';
+    let a;
+    try {
+      a = await fetchJson('api/analytics');
+    } catch {
+      body.innerHTML = '<span class="empty">Could not load the dashboard. Is the server running?</span>';
+      return;
+    }
+    if (!a || !a.ok) {
+      body.innerHTML = '<span class="empty">Could not load the dashboard.</span>';
+      return;
+    }
+
+    const v = a.verify, l = a.listen, r = a.recent;
+    const rate = v.total_claims ? Math.round((v.verified / v.total_claims) * 100) : null;
+
+    // Honest empty state — no runs yet (Grounded hard rule: no fake data).
+    if (v.total_claims === 0 && l.posts_analyzed === 0) {
+      body.innerHTML = '<span class="empty">No activity yet. Once your team checks claims and analyses posts, their totals and the misinformation trend appear here.</span>';
+      return;
+    }
+
+    // ── Headline stat tiles ──
+    const tiles = `
+      <div class="metric-grid">
+        <div class="metric">
+          <div class="label">Claims checked</div>
+          <div class="value">${v.total_claims}</div>
+          ${deltaHtml(r.last7.claims, r.prev7.claims)}
+        </div>
+        <div class="metric">
+          <div class="label">Verified true</div>
+          <div class="value">${v.verified}</div>
+          <div class="delta flat">${rate === null ? '—' : rate + '% of checks'}</div>
+        </div>
+        <div class="metric">
+          <div class="label">Misinformation caught</div>
+          <div class="value">${v.misinformation_caught}</div>
+          ${deltaHtml(r.last7.misinformation, r.prev7.misinformation)}
+        </div>
+        <div class="metric">
+          <div class="label">Posts analysed (Listen)</div>
+          <div class="value">${l.posts_analyzed}</div>
+          <div class="delta flat">${l.origins_tracked} origin${l.origins_tracked === 1 ? '' : 's'} tracked</div>
+        </div>
+      </div>`;
+
+    // ── Verdict breakdown bars ──
+    const tierMeta = [
+      ['VERIFIED', 'Verified', 't-VERIFIED'],
+      ['CONTESTED', 'Contested', 't-CONTESTED'],
+      ['LIKELY FALSE', 'Likely false', 't-FALSE'],
+      ['INSUFFICIENT EVIDENCE', 'Insufficient', 't-INSUFFICIENT'],
+    ];
+    const tierMax = Math.max(1, ...tierMeta.map(([k]) => v.by_tier[k] || 0));
+    const bars = tierMeta.map(([k, label, cls]) => {
+      const n = v.by_tier[k] || 0;
+      return `<div class="tier-bar-row">
+        <span>${label}</span>
+        <span class="tier-bar-track"><span class="tier-bar-fill ${cls}" style="width:${Math.round((n / tierMax) * 100)}%"></span></span>
+        <span class="tb-count">${n}</span>
+      </div>`;
+    }).join('');
+
+    // ── Trend chart — claims/day with misinformation portion in red ──
+    const daily = a.trend.daily || [];
+    const dayMax = Math.max(1, ...daily.map((d) => d.claims));
+    const cols = daily.map((d) => {
+      const rest = Math.max(0, d.claims - d.misinformation);
+      const restH = (rest / dayMax) * 100;
+      const misH = (d.misinformation / dayMax) * 100;
+      const title = `${fmtDay(d.date)}: ${d.claims} checked, ${d.misinformation} misinformation`;
+      return `<div class="trend-col" title="${title}">
+        ${restH > 0 ? `<div class="seg claims" style="height:${restH}%"></div>` : ''}
+        ${misH > 0 ? `<div class="seg mis" style="height:${misH}%"></div>` : ''}
+      </div>`;
+    }).join('');
+    const firstDay = daily.length ? fmtDay(daily[0].date) : '';
+    const lastDay = daily.length ? fmtDay(daily[daily.length - 1].date) : '';
+
+    const trend = `
+      <div class="dash-section-title">Verdict breakdown</div>
+      <div class="tier-bars">${bars}</div>
+      <div class="dash-section-title">Last ${a.trend.days} days</div>
+      <div class="trend-chart">${cols}</div>
+      <div class="trend-axis"><span>${firstDay}</span><span>${lastDay}</span></div>
+      <div class="trend-legend">
+        <span class="key"><span class="swatch claims"></span>Claims checked</span>
+        <span class="key"><span class="swatch mis"></span>Misinformation caught</span>
+      </div>`;
+
+    body.innerHTML = tiles + trend;
   }
 
   async function loadCorpus() {

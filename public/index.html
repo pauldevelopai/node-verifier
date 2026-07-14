@@ -162,6 +162,57 @@
     @media (max-width: 640px) {
       .row-flex { grid-template-columns: 1fr; }
     }
+    /* ─── Dashboard ─────────────────────────────────────────────── */
+    .dash-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .dash-head h2 { margin: 0; }
+    .metric .delta { font-size: 0.72rem; font-weight: 600; margin-top: 0.2rem; }
+    .metric .delta.up { color: var(--tier-false); }
+    .metric .delta.down { color: var(--tier-verified); }
+    .metric .delta.flat { color: var(--muted); }
+    .dash-section-title { font-size: 0.85rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 1.5rem 0 0.6rem; }
+    /* tier breakdown bars */
+    .tier-bars { display: flex; flex-direction: column; gap: 0.5rem; }
+    .tier-bar-row { display: grid; width: 100%; grid-template-columns: 128px 1fr 2.5rem; align-items: center; gap: 0.6rem; font-size: 0.85rem; }
+    .tier-bar-track { display: block; background: #ece8df; border-radius: 999px; height: 12px; overflow: hidden; }
+    .tier-bar-fill { display: block; height: 100%; border-radius: 999px; min-width: 2px; }
+    .tier-bar-fill.t-VERIFIED { background: var(--tier-verified); }
+    .tier-bar-fill.t-CONTESTED { background: var(--tier-contested); }
+    .tier-bar-fill.t-FALSE { background: var(--tier-false); }
+    .tier-bar-fill.t-INSUFFICIENT { background: var(--tier-insufficient); }
+    .tier-bar-row .tb-count { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+    /* trend chart — pure CSS/SVG columns, no external libs */
+    .trend-chart { display: flex; align-items: flex-end; gap: 2px; height: 120px; margin-top: 0.3rem; padding-top: 0.5rem; border-bottom: 1px solid var(--line); }
+    .trend-col { flex: 1 1 0; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 1px; min-width: 3px; position: relative; }
+    .trend-col .seg { width: 100%; border-radius: 1px 1px 0 0; }
+    .trend-col .seg.claims { background: var(--accent); }
+    .trend-col .seg.mis { background: var(--tier-false); }
+    .trend-col:hover .seg { opacity: 0.7; }
+    .trend-axis { display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--muted); margin-top: 0.3rem; }
+    .trend-legend { display: flex; gap: 1rem; font-size: 0.78rem; color: var(--muted); margin-top: 0.6rem; flex-wrap: wrap; }
+    .trend-legend .key { display: inline-flex; align-items: center; gap: 0.35rem; }
+    .trend-legend .swatch { width: 11px; height: 11px; border-radius: 2px; display: inline-block; }
+    .trend-legend .swatch.claims { background: var(--accent); }
+    .trend-legend .swatch.mis { background: var(--tier-false); }
+    /* ─── Mobile — reporters submitting/reviewing from the field ──── */
+    @media (max-width: 780px) {
+      header { padding: 1rem 1.1rem 0.85rem; }
+      nav { padding: 0 1.1rem; gap: 1.1rem; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      nav::-webkit-scrollbar { display: none; }
+      nav button { white-space: nowrap; padding: 0.7rem 0; }
+      main { padding: 1.1rem 1.1rem 3rem; }
+      .card { padding: 1rem 1.1rem; }
+    }
+    @media (max-width: 560px) {
+      html, body { font-size: 16px; }             /* iOS won't zoom inputs at ≥16px */
+      header h1 { font-size: 1.2rem; }
+      .metric-grid { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+      .tier-bar-row { grid-template-columns: 96px 1fr 2.2rem; font-size: 0.8rem; }
+      /* Comfortable touch targets in the field (≈44px) */
+      button.primary, button.secondary, .action-row button, .fb-btn, .provider-row button { min-height: 44px; }
+      .mode-switch { width: 100%; }
+      .mode-switch button { flex: 1; }
+      .dash-head { flex-wrap: wrap; }
+    }
   </style>
 </head>
 <body>
@@ -194,6 +245,8 @@
   </header>
 
   <nav>
+    <!-- Always visible (no data-mode): spans both modes -->
+    <button class="tab" data-panel="dashboard">Dashboard</button>
     <!-- Verify-mode tabs -->
     <button class="tab mode-verify active" data-panel="verify" data-mode="verify">Check a claim</button>
     <button class="tab mode-verify" data-panel="corpus" data-mode="verify">Past examples</button>
@@ -215,6 +268,19 @@
     </aside>
 
     <main>
+
+    <!-- ─── DASHBOARD (spans both modes) ───────────────────────── -->
+
+    <section id="panel-dashboard" class="panel">
+      <div class="card">
+        <div class="dash-head">
+          <h2>Impact dashboard</h2>
+          <button class="secondary" id="dashboard-refresh" type="button">↻ Refresh</button>
+        </div>
+        <p class="help">Live totals from everything this newsroom has run — claims checked, misinformation caught, and the day-by-day trend across the election window.</p>
+        <div id="dashboard-body"><span class="status-line">Loading…</span></div>
+      </div>
+    </section>
 
     <!-- ─── VERIFY MODE ────────────────────────────────────────── -->
 
