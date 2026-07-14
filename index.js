@@ -18,6 +18,7 @@ import { mountListenerRoutes } from './lib/listener-routes.js';
 import { mountInspectRoutes } from './lib/inspect-routes.js';
 import { mountJudgeRoutes } from './lib/judge-routes.js';
 import { mountHistoryRoutes } from './lib/history-routes.js';
+import { mountAnalyticsRoutes } from './lib/analytics-routes.js';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -59,6 +60,9 @@ async function main() {
 
   // Unified history feed for the left sidebar: /api/history.
   mountHistoryRoutes(app, () => host);
+
+  // Dashboard analytics (claims, verified, misinformation trend): /api/analytics.
+  mountAnalyticsRoutes(app, () => host);
 }
 
 main().catch((err) => {

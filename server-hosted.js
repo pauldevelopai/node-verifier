@@ -23,6 +23,7 @@ import { mountListenerRoutes } from "./lib/listener-routes.js";
 import { mountInspectRoutes } from "./lib/inspect-routes.js";
 import { mountJudgeRoutes } from "./lib/judge-routes.js";
 import { mountHistoryRoutes } from "./lib/history-routes.js";
+import { mountAnalyticsRoutes } from "./lib/analytics-routes.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync(join(__dirname, "package.json"), "utf8"));
@@ -46,6 +47,7 @@ await createHostedServer({
     mountInspectRoutes(app, hostFor);
     mountJudgeRoutes(app, hostFor);
     mountHistoryRoutes(app, hostFor);
+    mountAnalyticsRoutes(app, hostFor);
   },
   nodeVersion: pkg.version,
   staticDir: join(__dirname, "public"),
