@@ -476,14 +476,21 @@
   }
 
   // ─── Dashboard: analytics + misinformation trend ─────────────────
-  function deltaHtml(now, prev) {
+  // higherIsBad: when true (e.g. misinformation), a rise is coloured red and a
+  // fall green. When false (e.g. claims checked — more is just more activity),
+  // the change stays neutral so it doesn't read as a warning.
+  function deltaHtml(now, prev, higherIsBad = false) {
     if (prev === 0 && now === 0) return '<span class="delta flat">no change</span>';
-    if (prev === 0) return `<span class="delta up">▲ new activity</span>`;
+    if (prev === 0) {
+      const cls = higherIsBad ? 'up' : 'flat';
+      return `<span class="delta ${cls}">▲ new activity</span>`;
+    }
     const pct = Math.round(((now - prev) / prev) * 100);
     if (pct === 0) return '<span class="delta flat">± same as prev. 7 days</span>';
-    const dir = pct > 0 ? 'up' : 'down';
     const arrow = pct > 0 ? '▲' : '▼';
-    return `<span class="delta ${dir}">${arrow} ${Math.abs(pct)}% vs prev. 7 days</span>`;
+    // Neutral metrics (higherIsBad=false) never colour the delta good/bad.
+    const cls = higherIsBad ? (pct > 0 ? 'up' : 'down') : 'flat';
+    return `<span class="delta ${cls}">${arrow} ${Math.abs(pct)}% vs prev. 7 days</span>`;
   }
 
   function fmtDay(iso) {
@@ -533,7 +540,7 @@
         <div class="metric">
           <div class="label">Misinformation caught</div>
           <div class="value">${v.misinformation_caught}</div>
-          ${deltaHtml(r.last7.misinformation, r.prev7.misinformation)}
+          ${deltaHtml(r.last7.misinformation, r.prev7.misinformation, true)}
         </div>
         <div class="metric">
           <div class="label">Posts analysed (Listen)</div>
