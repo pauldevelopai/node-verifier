@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseAiJson, imageTooLarge } from '../lib/json.js';
 import { selectRelevant } from '../lib/corpus.js';
-import { normalizeFbRecord } from '../lib/enrich.js';
+import { normalizeFbRecord, extractResolvedPost } from '../lib/enrich.js';
 import { fetchUrlText } from '../lib/fetch-url.js';
 
 // ─── parseAiJson ─────────────────────────────────────────────────────
@@ -72,4 +72,36 @@ test('normalizeFbRecord does not invent a verified=false from missing data', () 
 test('fetchUrlText returns null for Facebook hosts without fetching', async () => {
   assert.equal(await fetchUrlText('https://www.facebook.com/groups/1/permalink/2/'), null);
   assert.equal(await fetchUrlText('not a url'), null);
+});
+
+// ─── extractResolvedPost: obscured-link → author + canonical (Apify) ──
+test('extractResolvedPost reads the creation_story author + canonical URL', () => {
+  // Representative apify~facebook-posts-scraper record for a resolved /share link.
+  const rec = {
+    url: 'https://www.facebook.com/permalink.php?story_fbid=123&id=456&utm_source=x',
+    creation_story: {
+      actors: [{ __typename: 'Page', name: 'Zambia Election Watchers', id: '456' }],
+      message: { text: 'Polls will be moved to Sunday.' },
+    },
+    created_time: 1_700_000_000,
+  };
+  const r = extractResolvedPost(rec);
+  assert.equal(r.author.name, 'Zambia Election Watchers');
+  assert.equal(r.author.type, 'page');
+  assert.equal(r.author.id, '456');
+  // Canonical URL is cleaned of tracking params, kept identifying ones, www host.
+  assert.ok(r.canonicalUrl.startsWith('https://www.facebook.com/permalink.php?'));
+  assert.ok(!r.canonicalUrl.includes('utm_source'));
+  assert.equal(r.text, 'Polls will be moved to Sunday.');
+  assert.ok(r.postTime);   // derived from created_time
+});
+
+test('extractResolvedPost handles the flat owner/profile shape and returns null on empty', () => {
+  const flat = { owner: { __typename: 'User', name: 'Jane Doe', id: '999' }, text: 'hi', topLevelUrl: 'https://facebook.com/story.php?story_fbid=1&id=999' };
+  const r = extractResolvedPost(flat);
+  assert.equal(r.author.name, 'Jane Doe');
+  assert.equal(r.author.type, 'profile');
+  assert.equal(r.author.url, 'https://www.facebook.com/profile.php?id=999');
+  assert.equal(extractResolvedPost({}), null);
+  assert.equal(extractResolvedPost(null), null);
 });
