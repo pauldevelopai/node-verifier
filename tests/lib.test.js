@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseAiJson, imageTooLarge } from '../lib/json.js';
 import { selectRelevant } from '../lib/corpus.js';
-import { normalizeFbRecord, extractResolvedPost } from '../lib/enrich.js';
+import { normalizeFbRecord, extractResolvedPost, extractGroupFields } from '../lib/enrich.js';
 import { fetchUrlText } from '../lib/fetch-url.js';
 
 // ─── parseAiJson ─────────────────────────────────────────────────────
@@ -104,4 +104,33 @@ test('extractResolvedPost handles the flat owner/profile shape and returns null 
   assert.equal(r.author.url, 'https://www.facebook.com/profile.php?id=999');
   assert.equal(extractResolvedPost({}), null);
   assert.equal(extractResolvedPost(null), null);
+});
+
+// ─── extractGroupFields: Facebook group card (Apify groups actor) ─────
+test('extractGroupFields maps member count, created date, privacy, and normalises shapes', () => {
+  const rec = {
+    name: 'facenaija',
+    membersCount: '128,400',
+    creationDate: '2019-03-11',
+    privacy: 'PRIVATE',
+    id: '100064',
+    categories: ['News', 'Politics'],
+  };
+  const f = extractGroupFields(rec);
+  assert.equal(f.account_type, 'group');
+  assert.equal(f.display_name, 'facenaija');
+  assert.equal(f.member_count, 128400);           // comma-stripped → number
+  assert.equal(f.created_date, '2019-03-11');
+  assert.equal(f.group_privacy, 'Private');        // PRIVATE → 'Private'
+  assert.equal(f.category, 'News, Politics');      // array → joined
+});
+
+test('extractGroupFields reads the isPublic boolean and k-suffixed counts; null on empty', () => {
+  const f = extractGroupFields({ groupName: 'Lusaka Watch', members: '12k', isPublic: true });
+  assert.equal(f.display_name, 'Lusaka Watch');
+  assert.equal(f.member_count, 12000);             // "12k" → 12000
+  assert.equal(f.group_privacy, 'Public');         // isPublic:true → 'Public'
+  // A record with nothing but noise yields null (type tag alone isn't enough).
+  assert.equal(extractGroupFields({ irrelevant: 1 }), null);
+  assert.equal(extractGroupFields(null), null);
 });
