@@ -341,6 +341,7 @@
   function renderOrigin() {
     const area = $('#origin-area');
     const { parsed, meta, risk, context, enrichment, ads, resolution } = currentOrigin;
+    const enrichmentStatus = currentOrigin.enrichment_status || {};
     const a = parsed.account || {};
     const who = a.displayHint || a.handle || (a.numericId ? 'ID ' + a.numericId : 'Unknown account');
 
@@ -370,6 +371,29 @@
     const enrichLine = enrichment && enrichment.source
       ? `<div class="origin-note" style="color:var(--tier-verified)">✓ Account details auto-filled from ${escapeHtml(SOURCE_LABEL[enrichment.source] || enrichment.source)} (logged-off public data — no Facebook login). Confirm/adjust below.</div>`
       : '';
+
+    // Group card — surface member count / privacy / created date explicitly, not
+    // just as risk flags, so the reader sees the transparency at a glance.
+    const groupBits = [];
+    if (context && context.member_count != null && context.member_count !== '') groupBits.push(`${Number(context.member_count).toLocaleString()} members`);
+    if (context && context.group_privacy) groupBits.push(String(context.group_privacy));
+    if (context && context.account_type === 'group' && context.created_date) groupBits.push(`created ${context.created_date}`);
+    const groupLine = groupBits.length
+      ? `<div class="origin-note"><strong>Group card:</strong> ${escapeHtml(groupBits.join(' · '))}</div>`
+      : '';
+
+    // Diagnostic — let the team self-diagnose when auto-resolve didn't fill in,
+    // instead of it silently looking broken. Based on which tokens are live.
+    const anyToken = enrichmentStatus.apify || enrichmentStatus.brightdata || enrichmentStatus.adlibrary;
+    let diag = '';
+    if (!anyToken) {
+      diag = '<div class="origin-note">Auto-enrichment is off — no scraper token is configured on the server. The identity above is read from the link itself; fill in what you can see below, or ask an admin to set <code>APIFY_TOKEN</code>.</div>';
+    } else if (!enrichment) {
+      const obscured = (parsed.signals || []).some((s) => s === 'origin_obscured_share' || s === 'origin_not_in_url');
+      diag = `<div class="origin-note">A scraper token is set, but nothing came back for this link${obscured
+        ? ' — the share/reel/watch actor may not support this URL type (set <code>APIFY_POSTS_ACTOR</code> to a share-capable actor)'
+        : ' — the actor may not cover this account/group type (try a different <code>APIFY_*_ACTOR</code>)'}. You can still add details manually below.</div>`;
+    }
 
     // Political ads (Meta Ad Library API) — funded amplification signal.
     let adsBlock = '';
@@ -412,6 +436,8 @@
         ${notes}
         ${metaLine}
         ${enrichLine}
+        ${groupLine}
+        ${diag}
 
         <div class="section" style="margin-top:0.7rem"><h3>Account risk signals</h3>${flags}</div>
         ${risk.cadence ? `<div class="origin-note">Posting cadence (sample of ${risk.cadence.sampled}): ~${risk.cadence.per_day}/day · mean ${risk.cadence.mean_interval_min} min apart · spans ${risk.cadence.distinct_hours} hrs/day · regularity ${risk.cadence.regularity_cv}.</div>` : ''}
