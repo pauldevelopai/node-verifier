@@ -25,9 +25,10 @@ slugs, so the table/file names differ — this is intentional, leave it:
 - **HOSTED** (`server-hosted.js`) slug `verifier` → Postgres tables **`node_verifier_store`**
   and **`node_verifier_activity`** (per-newsroom, scoped by `newsroom_id`).
 
-## Two entrypoints, same handlers
+## Three entrypoints, same handlers
 - **`index.js`** (LOCAL): `createLiteHost` + `createServer({ slug, host, handlers, displayName:"Election Watch" })`, then `mountListenerRoutes(app, () => host)` for the Listen-mode routes. Storage = JSON files, the user's own AI key.
 - **`server-hosted.js`** (ONLINE): sets `process.env.GROUNDED_HOSTED="1"`, then `await createHostedServer({ slug:"verifier", productName:"Election Watch", handlers, mountRoutes:(app,{hostFor})=>mountListenerRoutes(app,hostFor), staticDir })`. Runs on the box as pm2 `verifier-hosted` on :3004, reached at `/nodes/verifier/app/`.
+- **`mcp-server.js`** (MCP, local stdio): projects `postBrief` + `inspectUrl` as the MCP tools `verify_claim` / `trace_origin` for e.g. Claude Desktop — same slug (`capitalfm-verifier`), same local data as `index.js`. Phase-1 spike of `grounded2026/docs/MCP_BLUEPRINT.md`; curated manifest in `lib/mcp-tools.js`, wiring + gotchas in `MCP.md`.
 
 Handlers (`lib/handlers.js`, `lib/verifier.js`, `lib/pages.js`, `lib/posts.js`,
 `lib/listener-routes.js`, `lib/corpus.js`) target ONLY the host interface — no

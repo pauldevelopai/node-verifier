@@ -8,11 +8,13 @@
   "scripts": {
     "start": "node index.js",
     "start:hosted": "node server-hosted.js",
+    "start:mcp": "node mcp-server.js",
     "update": "node update.mjs",
     "test": "node --test tests/*.test.js"
   },
   "dependencies": {
-    "@developai/grounded-node-runtime": "github:pauldevelopai/grounded-node-runtime#v0.14.0"
+    "@developai/grounded-node-runtime": "github:pauldevelopai/grounded-node-runtime#v0.14.0",
+    "@modelcontextprotocol/sdk": "^1.30.0"
   },
   "license": "Apache-2.0"
 }
