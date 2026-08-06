@@ -1,14 +1,12 @@
 #!/usr/bin/env node
-// Election Watch — MCP boot (local, stdio). Phase-1 spike of the Grounded MCP
-// blueprint: hand-written here first; once proven, this generalises into
-// createMcpServer in @developai/grounded-node-runtime and this file shrinks to
-// a manifest + one call (see grounded2026/docs/MCP_BLUEPRINT.md).
+// Election Watch — MCP boot (local, stdio). Third entrypoint beside index.js
+// (local web) and server-hosted.js (online): projects the SAME handlers as MCP
+// tools for e.g. Claude Desktop, against the SAME local data as index.js. Data
+// and AI key stay on the laptop.
 //
-// Projects the SAME handlers the web app runs — (host, args) → result — as MCP
-// tools over stdio, against the SAME local data (lite host, slug
-// capitalfm-verifier), so a journalist's Claude Desktop works on the corpus and
-// history their Election Watch install already has. Data and AI key stay on the
-// laptop; nothing new is pooled.
+// The adapter lives in the runtime (createMcpServer, runtime ≥ v0.15.0 — this
+// Node was the phase-1 spike that proved it; see grounded2026/docs/MCP_BLUEPRINT.md).
+// This file is just: redirect stdout-logging, build the lite host, boot.
 //
 // Claude Desktop config (claude_desktop_config.json):
 //   { "mcpServers": { "election-watch": {
@@ -16,19 +14,16 @@
 //       "args": ["/absolute/path/to/node-verifier/mcp-server.js"] } } }
 
 import 'dotenv/config';
+import { createLiteHost, createMcpServer, redirectConsoleForStdio } from '@developai/grounded-node-runtime';
 
-// stdio transport: stdout IS the JSON-RPC channel. The runtime's lite host and
-// this Node both log with console.log — send ALL of that to stderr, before the
-// host exists, or the protocol stream gets corrupted.
-console.log = (...args) => console.error(...args);
+// stdio transport: stdout IS the JSON-RPC channel — silence console.log before
+// anything (the lite host included) can write to it.
+redirectConsoleForStdio();
 
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { createLiteHost } from '@developai/grounded-node-runtime';
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import * as handlers from './lib/handlers.js';
 import { ensureCorpusReady } from './lib/corpus.js';
 import { mcpTools } from './lib/mcp-tools.js';
 
@@ -51,34 +46,14 @@ async function main() {
   });
   await ensureCorpusReady(host);
 
-  const server = new Server(
-    { name: 'grounded-verifier', title: 'Election Watch (Grounded)', version: pkg.version },
-    { capabilities: { tools: {} } },
-  );
-
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: mcpTools.map(({ name, title, description, inputSchema, annotations }) => ({
-      name, title, description, inputSchema, annotations,
-    })),
-  }));
-
-  server.setRequestHandler(CallToolRequestSchema, async (req) => {
-    const tool = mcpTools.find((t) => t.name === req.params.name);
-    if (!tool) {
-      return { isError: true, content: [{ type: 'text', text: `Unknown tool: ${req.params.name}` }] };
-    }
-    try {
-      // The exact contract the REST wrap invokes: (host, args) → result object.
-      const result = await tool.handler(host, req.params.arguments || {});
-      return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-    } catch (err) {
-      await host.log?.error?.({ op: `mcp:${tool.name}`, error: err }).catch(() => {});
-      return { isError: true, content: [{ type: 'text', text: `${tool.name} failed: ${err.message || err}` }] };
-    }
+  await createMcpServer({
+    slug: 'verifier',                 // server name grounded-verifier (display identity)
+    productName: 'Election Watch',
+    nodeVersion: pkg.version,
+    host,
+    handlers,
+    tools: mcpTools,
   });
-
-  await server.connect(new StdioServerTransport());
-  console.error(`[mcp] grounded-verifier v${pkg.version} up (stdio) — tools: ${mcpTools.map((t) => t.name).join(', ')}`);
 }
 
 main().catch((err) => {

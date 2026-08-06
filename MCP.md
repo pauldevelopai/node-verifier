@@ -2,10 +2,12 @@
 
 This Node now has a **third boot mode** beside local (`index.js`) and hosted
 (`server-hosted.js`): a local **MCP server over stdio** that projects two of the
-Node's real handlers as MCP tools. Hand-written here first per the plan in
-`grounded2026/docs/MCP_BLUEPRINT.md` (§11 phase 1); once proven in use it
-generalises into `createMcpServer` in the runtime and this Node keeps only the
-manifest.
+Node's real handlers as MCP tools. This Node was the phase-1 spike of
+`grounded2026/docs/MCP_BLUEPRINT.md`; the adapter now lives in the runtime
+(`createMcpServer`, ≥ v0.15.0) and this Node keeps only the curated manifest
+(`lib/mcp-tools.js`) plus a ~40-line boot file (`mcp-server.js`). Any Node can
+now do the same — copy those two files and curate the manifest from that Node's
+own handlers.
 
 ## What's exposed
 
@@ -47,8 +49,9 @@ link"* or *"Verify this claim: …"*.
 ## Gotchas
 
 - **stdout is the protocol channel.** The runtime's lite host logs with
-  `console.log`; `mcp-server.js` redirects `console.log` → stderr before the
-  host is created. Never print to stdout from anything this boot loads.
+  `console.log`; call the runtime's `redirectConsoleForStdio()` before the
+  host is created (mcp-server.js does). Never print to stdout from anything
+  this boot loads.
 - `verify_claim` needs the same `.env` setup as the web app (`ANTHROPIC_API_KEY`
   etc.); without one it returns the handler's error rather than crashing.
 - Tested end-to-end in `tests/mcp.test.js` (spawns the server, speaks JSON-RPC).
