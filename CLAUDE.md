@@ -130,7 +130,7 @@ so in the log.
 ## Deps & deploy
 `@developai/grounded-node-runtime` (pin is in `package.json`; the current tag
 lives in `grounded2026/CLAUDE.md` — host.store + mountRoutes need ≥v0.9.0,
-corpus write-back needs ≥v0.18.0) + dotenv. Box: `cd /home/ubuntu/node-verifier && git pull && rm -rf node_modules/@developai && npm install && pm2 restart verifier-hosted`. `.env` (never
+corpus write-back needs ≥v0.18.0) + dotenv. Box: `cd /home/ubuntu/node-verifier && git pull && rm -rf node_modules/@developai && npm install "github:pauldevelopai/grounded-node-runtime#<tag>" && pm2 restart verifier-hosted --update-env`. **Naming the tag on the install line is not optional.** `package-lock.json` records the RESOLVED COMMIT of the old tag, and a plain `npm install` reuses it — so the runtime silently stays on the old version even after `rm -rf node_modules/@developai` and even with the new tag in `package.json`. Seen 2026-08-31: pinned v0.18.0, installed v0.15.0, no error. Check what actually landed: `node -p "require('./node_modules/@developai/grounded-node-runtime/package.json').version"`. `.env` (never
 committed) needs `JWT_SECRET` matching the tracker + a real `sk-ant-` `ANTHROPIC_API_KEY`
 + `DATABASE_URL`. NB: the README, launchers, and update.mjs are local-install only —
 changing them needs no box redeploy of the hosted service.
