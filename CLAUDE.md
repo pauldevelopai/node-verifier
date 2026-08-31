@@ -74,9 +74,39 @@ The dashboard. Uses RELATIVE paths (`<script src="app.js">`, `fetch("api/…")`)
 works at `/` (local) and under `/nodes/verifier/app/` (hosted). All 17 fetches are
 relative — if you add one, keep it relative or it 404s against the tracker.
 
+## What this Node contributes to the corpus (`lib/corpus-writeback.js`)
+Everything here also persists to `host.store` — but that is a Node-local silo, so
+each result is written **twice**: once for the app, once for the platform. Two
+collections, because they answer different questions:
+
+- **`misinformation_record`** — the claim or post itself: what circulated, in
+  which jurisdiction, the AI's tier/confidence as `outcome`, the reasoning chain,
+  the web citations, the coordination flags. Born `ai_drafted`. This is the
+  Zambian election misinformation archive, and it outlives the app.
+- **`newsroom_ai`** — the practice signal, written when a journalist rules:
+  `outcome` is `agreed` or `overruled`. Adoption data with an outcome attached —
+  how often the AI was *right*, not how often it was used.
+
+The verification contract needs no parallel workflow: a journalist approving a
+result in the judgments loop **is** the named human verification, so an approve
+flips that record to `human_verified` with their email. `verifiedBy` comes from
+the tracker session (`req.user.email`), never the request body. Running locally
+there is no signed-in person, so the record honestly stays `ai_drafted`.
+
+Every call is **guarded and best-effort**: it returns null on a runtime without
+`host.corpus` (logging once, loudly — a Node that silently writes nothing looks
+identical to one that works) and never throws into a journalist's result. The
+corpus dedups on `source_url`, so `linkableId` refuses to link a claim to a
+record that belongs to a *different* claim from the same URL — otherwise
+approving one would stamp `human_verified` on the other.
+
+Needs runtime **≥ v0.17.1** (`host.corpus` + the `misinformation_record`
+collection). On anything older the write-backs no-op and say so in the log.
+
 ## Deps & deploy
-`@developai/grounded-node-runtime` (pinned `#v0.14.0` — host.store + mountRoutes need
-≥v0.9.0) + dotenv. Box: `cd /home/ubuntu/node-verifier && git pull && rm -rf node_modules/@developai && npm install && pm2 restart verifier-hosted`. `.env` (never
+`@developai/grounded-node-runtime` (pin is in `package.json`; the current tag
+lives in `grounded2026/CLAUDE.md` — host.store + mountRoutes need ≥v0.9.0,
+corpus write-back needs ≥v0.17.1) + dotenv. Box: `cd /home/ubuntu/node-verifier && git pull && rm -rf node_modules/@developai && npm install && pm2 restart verifier-hosted`. `.env` (never
 committed) needs `JWT_SECRET` matching the tracker + a real `sk-ant-` `ANTHROPIC_API_KEY`
 + `DATABASE_URL`. NB: the README, launchers, and update.mjs are local-install only —
 changing them needs no box redeploy of the hosted service.
