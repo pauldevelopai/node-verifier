@@ -100,13 +100,37 @@ corpus dedups on `source_url`, so `linkableId` refuses to link a claim to a
 record that belongs to a *different* claim from the same URL — otherwise
 approving one would stamp `human_verified` on the other.
 
-Needs runtime **≥ v0.17.1** (`host.corpus` + the `misinformation_record`
-collection). On anything older the write-backs no-op and say so in the log.
+- **Origin tracking** (`/api/inspect`) writes a record about the SOURCE, not the
+  claim: the account, whether the URL hides its author behind a share token, the
+  Page Transparency merge (admin country, creation date, name history, ad
+  activity), the risk flags with their weights, and any political ads found.
+  Keyed on the account URL, so re-tracking one page updates one record. Over an
+  election that becomes a map of the accounts pushing misinformation — the thing
+  a claim archive alone cannot give you, because one page turns up behind a
+  hundred claims.
+- **Use itself** is recorded, whether or not anyone rates anything: one
+  `newsroom_ai` record per newsroom per function per month (`signal: 'usage'`,
+  `outcome: 'in_use'`). Without it a newsroom that runs 400 checks and never
+  presses approve would contribute nothing to the adoption record — which is
+  exactly the newsroom we most want counted. Counts stay in the Node's store and
+  activity log; the corpus carries the shape of adoption across newsrooms and
+  time.
+
+The newsroom's **name and country come from `host.meta.org`** (runtime v0.18.0),
+never from an env var — hosted, one process serves every newsroom, so a single
+`NEWSROOM_JURISDICTION` would stamp a Kenyan newsroom's records `ZM`. With no
+country set the field is empty rather than guessed. `NEWSROOM_COUNTRY` /
+`NEWSROOM_JURISDICTION` remain the answer for a local install, where the install
+really is one newsroom.
+
+Needs runtime **≥ v0.18.0** (`host.corpus`, the `misinformation_record`
+collection, and `host.meta.org`). On anything older the write-backs no-op and say
+so in the log.
 
 ## Deps & deploy
 `@developai/grounded-node-runtime` (pin is in `package.json`; the current tag
 lives in `grounded2026/CLAUDE.md` — host.store + mountRoutes need ≥v0.9.0,
-corpus write-back needs ≥v0.17.1) + dotenv. Box: `cd /home/ubuntu/node-verifier && git pull && rm -rf node_modules/@developai && npm install && pm2 restart verifier-hosted`. `.env` (never
+corpus write-back needs ≥v0.18.0) + dotenv. Box: `cd /home/ubuntu/node-verifier && git pull && rm -rf node_modules/@developai && npm install && pm2 restart verifier-hosted`. `.env` (never
 committed) needs `JWT_SECRET` matching the tracker + a real `sk-ant-` `ANTHROPIC_API_KEY`
 + `DATABASE_URL`. NB: the README, launchers, and update.mjs are local-install only —
 changing them needs no box redeploy of the hosted service.
